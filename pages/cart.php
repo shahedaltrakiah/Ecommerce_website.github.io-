@@ -10,10 +10,10 @@
   <meta name="keywords" content="bootstrap, bootstrap4" />
 
 		<!-- Bootstrap CSS -->
-		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<link href="../css/bootstrap.min.css" rel="stylesheet">
 		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-		<link href="css/tiny-slider.css" rel="stylesheet">
-		<link href="css/style.css" rel="stylesheet">
+		<link href="../css/tiny-slider.css" rel="stylesheet">
+		<link href="../css/style.css" rel="stylesheet">
 		<title>Furni Free Bootstrap 5 Template for Furniture and Interior Design Websites by Untree.co </title>
 	</head>
 
@@ -89,7 +89,7 @@
                       <tbody>
                         <tr>
                           <td class="product-thumbnail">
-                            <img src="images/product-1.png" alt="Image" class="img-fluid">
+                            <img src="../images/product-1.png" alt="Image" class="img-fluid">
                           </td>
                           <td class="product-name">
                             <h2 class="h5 text-black">Product 1</h2>
@@ -113,7 +113,7 @@
         
                         <tr>
                           <td class="product-thumbnail">
-                            <img src="images/product-2.png" alt="Image" class="img-fluid">
+                            <img src="../images/product-2.png" alt="Image" class="img-fluid">
                           </td>
                           <td class="product-name">
                             <h2 class="h5 text-black">Product 2</h2>
@@ -206,7 +206,7 @@
 			<div class="container relative">
 
 				<div class="sofa-img">
-					<img src="images/sofa.png" alt="Image" class="img-fluid">
+					<img src="../images/sofa.png" alt="Image" class="img-fluid">
 				</div>
 
 				<div class="row">
