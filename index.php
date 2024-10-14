@@ -43,7 +43,7 @@
 
                 <ul class="custom-navbar-cta navbar-nav mb-2 mb-md-0 ms-5">
                     <li><a class="nav-link" href="pages/login.php"><i class="fa-solid fa-right-to-bracket"></i></a></li>
-                    <li><a class="nav-link" href="cart.html"><img src="images/cart.svg"></a></li>
+                    <li><a class="nav-link" href="pages/cart.php"><img src="images/cart.svg"></a></li>
                 </ul>
             </div>
         </div>
