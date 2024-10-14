@@ -11,10 +11,10 @@
 	<meta name="keywords" content="bootstrap, bootstrap4" />
 
 		<!-- Bootstrap CSS -->
-		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<link href="../css/bootstrap.min.css" rel="stylesheet">
 		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-		<link href="css/tiny-slider.css" rel="stylesheet">
-		<link href="css/style.css" rel="stylesheet">
+		<link href="../css/tiny-slider.css" rel="stylesheet">
+		<link href="../css/style.css" rel="stylesheet">
 		<title>Furni Free Bootstrap 5 Template for Furniture and Interior Design Websites by Untree.co </title>
 	</head>
 
@@ -24,7 +24,7 @@
 	<nav class="custom-navbar navbar navbar navbar-expand-md navbar-dark bg-dark" arial-label="Furni navigation bar">
 
 		<div class="container">
-			<a class="navbar-brand" href="../index.html">Furni<span>.</span></a>
+			<a class="navbar-brand" href="../index.php">Furni<span>.</span></a>
 
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsFurni"
 				aria-controls="navbarsFurni" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,7 +34,7 @@
 			<div class="collapse navbar-collapse" id="navbarsFurni">
 				<ul class="custom-navbar-nav navbar-nav ms-auto mb-2 mb-md-0">
 					<li class="nav-item ">
-						<a class="nav-link" href="../index.html">Home</a>
+						<a class="nav-link" href="../index.php">Home</a>
 					</li>
 					<li><a class="nav-link" href="shop.php">Shop</a></li>
 					<li><a class="nav-link" href="about.html">About us</a></li>
