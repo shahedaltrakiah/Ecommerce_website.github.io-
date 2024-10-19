@@ -44,6 +44,7 @@ a.more {
   padding-bottom: 20px;
 }
 
+
 .custom-navbar .navbar-brand {
   font-size: 32px;
   font-weight: 600;
@@ -149,6 +150,7 @@ a.more {
   padding: calc(4rem - 30px) 0 0rem 0;
 }
 
+
 @media (min-width: 768px) {
   .hero {
     padding: calc(4rem - 30px) 0 4rem 0;
@@ -174,8 +176,7 @@ a.more {
 
 .hero h1 {
   font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 30px;
+  color: hwb(0 100% 0%);
 }
 
 @media (min-width: 1400px) {
@@ -186,7 +187,7 @@ a.more {
 
 .hero p {
   color: rgba(255, 255, 255, 0.5);
-  margin-botom: 30px;
+  margin-bottom: 30px;
 }
 
 .hero .hero-img-wrap {
@@ -1036,23 +1037,4 @@ textarea {
   height: 50px;
   border-radius: 50%;
   background: rgba(59, 93, 80, 0.2);
-}
-.cart-count {
-  position: absolute;
-  background: red;
-  color: white;
-  border-radius: 50%;
-  /* bottom: 20px; */
-  /* padding: 0px 0px; */
-  font-size: 10px;
-  font-weight: bold;
-  min-width: 20px;
-  text-align: center;
-  /* min-height: 26px; */
-  height: 24px;
-  margin: auto;
-  /* display: flex; */
-  justify-content: cena;
-  justify-content: center;
-
 }
