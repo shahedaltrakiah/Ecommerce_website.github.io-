@@ -23,7 +23,8 @@
     <nav class="custom-navbar navbar navbar navbar-expand-md navbar-dark bg-dark" arial-label="Furni navigation bar">
 
         <div class="container">
-            <a class="navbar-brand" href="index.php"><img class="logo-img" src="images/Logo" style="max-width:150px;" ></a>
+            <a class="navbar-brand" href="index.php"><img class="logo-img" src="images/Logo"
+                    style="max-width:150px;"></a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsFurni"
                 aria-controls="navbarsFurni" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,10 +58,11 @@
                 <div class="col-lg-5">
                     <div class="intro-excerpt">
                         <h1>Modern Interior <span clsas="d-block">Design Studio</span></h1>
-                        <p class="mb-4">Donec vitae odio quis nisl dapibus malesuada. Nullam ac aliquet velit. Aliquam
-                            vulputate velit imperdiet dolor tempor tristique.</p>
-                        <p><a href="" class="btn btn-secondary me-2">Shop Now</a><a href="#"
-                                class="btn btn-white-outline">Explore</a></p>
+                        <p class="mb-4">Transforming your vision into stunning, personalized spaces. Let’s create your
+                            dream environment together!</p>
+                        <p><a href="pages/shop.php" class="btn btn-secondary me-2">Shop Now</a>
+                            <a href="pages/about.html" class="btn btn-white-outline">Explore</a>
+                        </p>
                     </div>
                 </div>
                 <div class="col-lg-7">
@@ -456,7 +458,7 @@
 
     <!-- Start Footer Section -->
     <footer class="footer-section">
-        <div class="container relative">
+        <div class="container relative" style="margin-bottom: -50px;">
 
             <div class="sofa-img">
                 <img src="images/sofa.png" alt="Image" class="img-fluid">
@@ -488,10 +490,11 @@
 
             <div class="row g-5 mb-5">
                 <div class="col-lg-4">
-                    <div class="mb-4 footer-logo-wrap"><a href="#" class="footer-logo">Furni<span>.</span></a></div>
-                    <p class="mb-4">Donec facilisis quam ut purus rutrum lobortis. Donec vitae odio quis nisl dapibus
-                        malesuada. Nullam ac aliquet velit. Aliquam vulputate velit imperdiet dolor tempor tristique.
-                        Pellentesque habitant</p>
+                    <div class="mb-4 footer-logo-wrap"><a href="#" class="footer-logo">Nest & Buy </a></div>
+                    <p class="mb-4">At Nest & Buy, we bring you stylish, high-quality furniture to make your home cozy
+                        and beautiful. With a focus on craftsmanship and design, we’re here to help you create spaces
+                        you love.
+                    </p>
 
                     <ul class="list-unstyled custom-social">
                         <li><a href="#"><span class="fa fa-brands fa-facebook-f"></span></a></li>
@@ -505,35 +508,31 @@
                     <div class="row links-wrap">
                         <div class="col-6 col-sm-6 col-md-3">
                             <ul class="list-unstyled">
-                                <li><a href="#">About us</a></li>
-                                <li><a href="#">Services</a></li>
-                                <li><a href="#">Blog</a></li>
+                                <li><a href="about.html">About us</a></li>
+                                <li><a href="shop.php">Shop</a></li>
                                 <li><a href="#">Contact us</a></li>
                             </ul>
                         </div>
 
                         <div class="col-6 col-sm-6 col-md-3">
                             <ul class="list-unstyled">
-                                <li><a href="#">Support</a></li>
-                                <li><a href="#">Knowledge base</a></li>
+                                <li><a href="#">Testimonials</a></li>
+                                <li><a href="#">Our team</a></li>
                                 <li><a href="#">Live chat</a></li>
                             </ul>
                         </div>
 
                         <div class="col-6 col-sm-6 col-md-3">
                             <ul class="list-unstyled">
-                                <li><a href="#">Jobs</a></li>
-                                <li><a href="#">Our team</a></li>
-                                <li><a href="#">Leadership</a></li>
-                                <li><a href="#">Privacy Policy</a></li>
+                                <li><a href="#">Category</a></li>
+                                <li><a href="#">Product</a></li>
+                                <li><a href="#">Best seller</a></li>
                             </ul>
                         </div>
 
                         <div class="col-6 col-sm-6 col-md-3">
                             <ul class="list-unstyled">
-                                <li><a href="#">Nordic Chair</a></li>
-                                <li><a href="#">Kruzo Aero</a></li>
-                                <li><a href="#">Ergonomic Chair</a></li>
+                                <img src="images/Logo (2).png" style="max-width: 130px;">
                             </ul>
                         </div>
                     </div>
@@ -546,9 +545,7 @@
                     <div class="col-lg-6">
                         <p class="mb-2 text-center text-lg-start">Copyright &copy;
                             <script>document.write(new Date().getFullYear());</script>. All Rights Reserved. &mdash;
-                            Designed with love by <a href="https://untree.co">Untree.co</a> Distributed By <a
-                                hreff="https://themewagon.com">ThemeWagon</a>
-                            <!-- License information: https://untree.co/license/ -->
+                            Designed with love by Nest & Buy
                         </p>
                     </div>
 
@@ -558,10 +555,8 @@
                             <li><a href="#">Privacy Policy</a></li>
                         </ul>
                     </div>
-
                 </div>
             </div>
-
         </div>
     </footer>
     <!-- End Footer Section -->

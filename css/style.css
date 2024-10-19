@@ -1038,3 +1038,73 @@ textarea {
   border-radius: 50%;
   background: rgba(59, 93, 80, 0.2);
 }
+
+.team-member {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.team-member:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.team-img-wrap img {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  object-fit: cover;
+}
+
+.team-img-wrap img:hover {
+  transform: scale(1.1);
+}
+
+.team-member h3 {
+  margin-top: 15px;
+  font-size: 1.4em;
+  color: #333;
+}
+
+.team-member p {
+  font-size: 1em;
+  color: #777;
+}
+
+.bio {
+  font-size: 0.9em;
+  color: #555;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: #fff;
+  border-radius: 30px;
+  padding: 5px 15px;
+  text-transform: uppercase;
+  font-size: 0.8em;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+a {
+  text-decoration: none;
+}
+
+.untree_co-section i:hover {
+
+  color: #3B5D50;
+}
+
+
+.card-spacing {
+  margin-bottom: 30px;
+}
+
