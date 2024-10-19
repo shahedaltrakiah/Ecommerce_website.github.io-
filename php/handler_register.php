@@ -18,21 +18,21 @@ if(postMethod()){
 
   
     if(requiredInput($username)){
-        $errors[] = "username required";
+        $errors[] = "user name required";
     } elseif(minInput($username, 4)) {
-        $errors[] = "username must be greater than 4 characters";
-    } elseif(maxInput($username, 25)) {
-        $errors[] = "username must be smaller than 25 characters";
+        $errors[] = "user name must be greater than 4 characters";
+    } elseif(maxInput($username, 30)) {
+        $errors[] = "user name must be smaller than 30 characters";
     }
    
 
 
     if(requiredInput($first_name)){
-        $errors[] = "Last name required";
+        $errors[] = "first name required";
     } elseif(minInput($first_name, 4)) {
-        $errors[] = "Last name must be greater than 4 characters";
-    } elseif(maxInput($first_name, 10)) {
-        $errors[] = "Last name must be smaller than 10 characters";
+        $errors[] = "first name must be greater than 4 characters";
+    } elseif(maxInput($first_name, 15)) {
+        $errors[] = "first name must be smaller than 15 characters";
     }
     if(requiredInput($last_name)){
         $errors[] = "Last name required";
