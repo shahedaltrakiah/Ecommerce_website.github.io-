@@ -1,3 +1,74 @@
+<?php
+session_start(); // Start the session to access cart data
+
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "ecommerce_db"; // Your database name
+
+try {
+    $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch(PDOException $e) {
+    echo "Connection failed: " . $e->getMessage();
+    exit();
+}
+
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Get form data
+    $firstName = $_POST['c_fname'];
+    $lastName = $_POST['c_lname'];
+    $address = $_POST['c_address'];
+    $stateCountry = $_POST['c_state_country'];
+    $postalZip = $_POST['c_postal_zip'];
+    $email = $_POST['c_email_address'];
+    $phone = $_POST['c_phone'];
+    $orderNotes = $_POST['c_order_notes'];
+
+    // Calculate total amount from cart items
+    $totalAmount = 0;
+    if (isset($_SESSION['cart'])) {
+        foreach ($_SESSION['cart'] as $item) {
+            $totalAmount += $item['price'] * $item['quantity']; // Assuming each item has 'price' and 'quantity'
+        }
+    }
+
+    // Insert order into the database
+    $sql = "INSERT INTO `Order` (customer_id, total_amount, status) VALUES (:customer_id, :total_amount, 'pending')";
+    $stmt = $conn->prepare($sql);
+    
+    // Assuming you have a way to get customer_id
+    $customerId = 1; // Placeholder: replace with actual customer ID retrieval logic
+    $stmt->bindParam(':customer_id', $customerId);
+    $stmt->bindParam(':total_amount', $totalAmount);
+
+    if ($stmt->execute()) {
+        // Get the last inserted order ID
+        $orderId = $conn->lastInsertId();
+
+        // Insert order items into order_items table
+        foreach ($_SESSION['cart'] as $item) {
+            $sql = "INSERT INTO Order_Item (order_id, product_id, quantity, price) VALUES (:order_id, :product_id, :quantity, :price)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':order_id', $orderId);
+            $stmt->bindParam(':product_id', $item['product_id']);
+            $stmt->bindParam(':quantity', $item['quantity']);
+            $stmt->bindParam(':price', $item['price']);
+            $stmt->execute();
+        }
+
+        // Clear the cart after order is placed
+        unset($_SESSION['cart']);
+
+        // Redirect to thank you page
+        header("Location: thankyou.html");
+        exit();
+    } else {
+        echo "Error: Could not place order.";
+    }
+}
+?>
 <!doctype html>
 <html lang="en">
 
@@ -61,93 +132,75 @@
 				</div>
 			</div>
 			<div class="row">
-				<div class="col-md-6 mb-5 mb-md-0">
-					<h2 class="h3 mb-3 text-black">Billing Details</h2>
-					<div class="p-3 p-lg-5 border bg-white">
-						<div class="form-group row">
-							<div class="col-md-6">
-								<label for="c_fname" class="text-black">First Name <span
-										class="text-danger">*</span></label>
-								<input type="text" class="form-control" id="c_fname" name="c_fname">
-							</div>
-							<div class="col-md-6">
-								<label for="c_lname" class="text-black">Last Name <span
-										class="text-danger">*</span></label>
-								<input type="text" class="form-control" id="c_lname" name="c_lname">
-							</div>
-						</div>
+    <div class="col-md-6 mb-5 mb-md-0">
+        <h2 class="h3 mb-3 text-black">Billing Details</h2>
+        <div class="p-3 p-lg-5 border bg-white">
+		<form action="checkout.php" method="POST" onsubmit="return validateForm() ">
+    <div class="form-group row">
+        <div class="col-md-6">
+            <label for="c_fname" class="text-black">First Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="c_fname" name="c_fname" required>
+        </div>
+        <div class="col-md-6">
+            <label for="c_lname" class="text-black">Last Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="c_lname" name="c_lname" required>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-12">
+            <label for="c_address" class="text-black">Address <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="c_address" name="c_address" placeholder="Street address" required>
+        </div>
+    </div>
+    
+    <div class="form-group row">
+        <div class="col-md-6">
+            <label for="c_state_country" class="text-black">State / Country <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="c_state_country" name="c_state_country" required>
+        </div>
+        <div class="col-md-6">
+            <label for="c_postal_zip" class="text-black">Postal / Zip <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="c_postal_zip" name="c_postal_zip" required>
+        </div>
+    </div>
 
-						<div class="form-group row">
-							<div class="col-md-12">
-								<label for="c_companyname" class="text-black">Company Name </label>
-								<input type="text" class="form-control" id="c_companyname" name="c_companyname">
-							</div>
-						</div>
+    <div class="form-group row mb-5">
+        <div class="col-md-6">
+            <label for="c_email_address" class="text-black">Email Address <span class="text-danger">*</span></label>
+            <input type="email" class="form-control" id="c_email_address" name="c_email_address" required>
+        </div>
+        <div class="col-md-6">
+            <label for="c_phone" class="text-black">Phone <span class="text-danger">*</span></label>
+            <input type="tel" class="form-control" id="c_phone" name="c_phone" placeholder="Phone Number" required>
+        </div>
+    </div>
 
-						<div class="form-group row">
-							<div class="col-md-12">
-								<label for="c_address" class="text-black">Address <span
-										class="text-danger">*</span></label>
-								<input type="text" class="form-control" id="c_address" name="c_address"
-									placeholder="Street address">
-							</div>
-						</div>
-						<div class="form-group row">
-							<div class="col-md-6">
-								<label for="c_state_country" class="text-black">State / Country <span
-										class="text-danger">*</span></label>
-								<input type="text" class="form-control" id="c_state_country" name="c_state_country">
-							</div>
-							<div class="col-md-6">
-								<label for="c_postal_zip" class="text-black">Posta / Zip <span
-										class="text-danger">*</span></label>
-								<input type="text" class="form-control" id="c_postal_zip" name="c_postal_zip">
-							</div>
-						</div>
+    <div class="form-group m-2">
+        <label for="c_order_notes" class="text-black">Order Notes</label>
+        <textarea name="c_order_notes" id="c_order_notes" cols="30" rows="5" class="form-control" placeholder="Write your notes here..."></textarea>
+    </div>
 
-						<div class="form-group row mb-5">
-							<div class="col-md-6">
-								<label for="c_email_address" class="text-black">Email Address <span
-										class="text-danger">*</span></label>
-								<input type="text" class="form-control" id="c_email_address" name="c_email_address">
-							</div>
-							<div class="col-md-6">
-								<label for="c_phone" class="text-black">Phone <span class="text-danger">*</span></label>
-								<input type="text" class="form-control" id="c_phone" name="c_phone"
-									placeholder="Phone Number">
-							</div>
-						</div>
-						<div class="form-group">
-							<label for="c_order_notes" class="text-black">Order Notes</label>
-							<textarea name="c_order_notes" id="c_order_notes" cols="30" rows="5" class="form-control"
-								placeholder="Write your notes here..."></textarea>
-						</div>
+    <button type="submit" class="btn btn-primary m-auto d-flex p-3">Proceed to Payment</button>
+</form>
+        </div>
+    </div>
 
-					</div>
-				</div>
-				<div class="col-md-6">
-
-					<div class="row mb-5">
-						<div class="col-md-12">
-							<h2 class="h3 mb-3 text-black">Coupon Code</h2>
-							<div class="p-3 p-lg-5 border bg-white">
-
-								<label for="c_code" class="text-black mb-3">Enter your coupon code if you have
-									one</label>
-								<div class="input-group w-75 couponcode-wrap">
-									<input type="text" class="form-control me-2" id="c_code" placeholder="Coupon Code"
-										aria-label="Coupon Code" aria-describedby="button-addon2">
-									<div class="input-group-append">
-										<button class="btn btn-black btn-sm" type="button"
-											id="button-addon2">Apply</button>
-									</div>
-								</div>
-
-							</div>
-						</div>
-					</div>
-
-					<div class="row mb-5">
+    <div class="col-md-6">
+        <div class="row mb-5">
+            <div class="col-md-12">
+                <h2 class="h3 mb-3 text-black">Coupon Code</h2>
+                <div class="p-3 p-lg-5 border bg-white">
+                    <label for="c_code" class="text-black mb-3">Enter your coupon code if you have one</label>
+                    <div class="input-group w-75 couponcode-wrap">
+                        <input type="text" class="form-control me-2" id="c_code" name="c_code" placeholder="Coupon Code" aria-label="Coupon Code">
+                        <div class="input-group-append">
+                            <button class="btn btn-black btn-sm" type="button" id="apply-coupon">Apply</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+		<div class="row mb-5">
 						<div class="col-md-12">
 							<h2 class="h3 mb-3 text-black">Your Order</h2>
 							<div class="p-3 p-lg-5 border bg-white">
@@ -187,10 +240,11 @@
 
 				</div>
 			</div>
-			<!-- </form> -->
-		</div>
-	</div>
+    </div>
+</div>
 
+
+			<!-- </form> -->
 	<!-- Start Footer Section -->
 	<footer class="footer-section">
 		<div class="container relative">
@@ -303,10 +357,47 @@
 	</footer>
 	<!-- End Footer Section -->
 
+<script>
+function validateForm() {
+    const firstName = document.getElementById('c_fname').value;
+    const lastName = document.getElementById('c_lname').value;
+    const email = document.getElementById('c_email_address').value;
+    const phone = document.getElementById('c_phone').value;
+    const postal = document.getElementById('c_postal_zip').value;
+    const namePattern = /^[A-Za-z]{3,}$/; 
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
+    const phonePattern = /^\d{10}$/; 
+    const postalPattern = /^\d{5}(-\d{4})?$/; 
 
+    if (!namePattern.test(firstName)) {
+        alert("First name must contain at least 3 letters.");
+        return false;
+    }
+    if (!namePattern.test(lastName)) {
+        alert("Last name must contain at least 3 letters.");
+        return false;
+    }
+    if (!emailPattern.test(email)) {
+        alert("Please enter a valid email address.");
+        return false;
+    }
+	if (!postalPattern.test(postal)) {
+        alert("Please enter a valid postal/ZIP code.");
+        return false;
+    }
+    if (!phonePattern.test(phone)) {
+        alert("Phone number must be exactly 10 digits.");
+        return false;
+    }
+
+
+    return true; 
+}
+</script>
 	<script src="../js/bootstrap.bundle.min.js"></script>
 	<script src="../js/tiny-slider.js"></script>
 	<script src="../js/custom.js"></script>
+	<script src="../js/checkoutvald.js"></script>
 </body>
 
 </html>

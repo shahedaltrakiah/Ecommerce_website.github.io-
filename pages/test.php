@@ -1,64 +1,36 @@
 <?php
 session_start();
-$products = [
-    [
-        'id' => 1,
-        'name' => 'Sofa 1',
-        'description' => 'Comfortable 3-seater sofa.',
-        'price' => 299.99,
-        'height' => 85,
-        'width' => 200, 
-        'image' => '../images/product-2.png' 
-    ],
-    [
-        'id' => 2,
-        'name' => 'Sofa 1',
-        'description' => 'Comfortable 3-seater sofa.',
-        'price' => 299.99,
-        'height' => 85, 
-        'width' => 200,
-        'image' => '../images/product-2.png' 
-    ],
-    [
-        'id' => 3,
-        'name' => 'Sofa 1',
-        'description' => 'Comfortable 3-seater sofa.',
-        'price' => 299.99,
-        'height' => 85, 
-        'width' => 200, 
-        'image' => '../images/product-2.png' 
-    ],
-    [
-        'id' => 4,
-        'name' => 'Sofa 1',
-        'description' => 'Comfortable 3-seater sofa.',
-        'price' => 299.99,
-        'height' => 85,
-        'width' => 200,
-        'image' => '../images/product-2.png' 
-    ],
-];
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $productId = $_POST['id'];
-    $productName = $_POST['name'];
-    $productDescription = $_POST['description'];
-    $productPrice = $_POST['price'];
-    $productHeight = $_POST['height'];
-    $productWidth = $_POST['width'];
-    $productImage = $_POST['image'];
-    if (!isset($_SESSION['cart'])) {
-        $_SESSION['cart'] = [];
+$servername = "localhost";
+$username = "root";
+$password = "";
+
+try {
+    $conn = new PDO("mysql:host=$servername;dbname=ecommerce_db", $username, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch(PDOException $e) {
+    echo "Connection failed: " . $e->getMessage();
+}
+
+$query = "SELECT * FROM Product";
+$stmt = $conn->query($query);
+$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
+    $productId = $_POST['product_id'];
+
+    // Fetch product details from the database
+    $stmt = $conn->prepare("SELECT * FROM Product WHERE product_id = :product_id");
+    $stmt->execute(['product_id' => $productId]);
+    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($product) {
+        $_SESSION['cart'][$productId] = [
+            'name' => $product['product_name'],
+            'price' => $product['price'],
+            'quantity' => ($_SESSION['cart'][$productId]['quantity'] ?? 0) + 1,
+            'image' => 'path/to/image/' . $product['product_id'] . '.jpg' // Adjust this path accordingly
+        ];
     }
-    $_SESSION['cart'][$productId] = [
-        'name' => $productName,
-        'description' => $productDescription,
-        'price' => $productPrice,
-        'height' => $productHeight,
-        'width' => $productWidth,
-        'image' => $productImage,
-        'quantity' => isset($_SESSION['cart'][$productId]['quantity']) ? $_SESSION['cart'][$productId]['quantity'] + 1 : 1
-    ];
-    
     header("Location: cart.php");
     exit();
 }
@@ -69,34 +41,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Page</title>
+    <title>Product Test Page</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-    </style>
 </head>
-<body style="background-color:black">
+<body>
     <div class="container mt-5">
-        <h1>Available Sofas</h1>
+        <h1 class="mb-4">Products</h1>
         <div class="row">
             <?php foreach ($products as $product): ?>
-                <div class="col-md-3">
-                    <div class="card mb-4">
-                        <img src="<?= $product['image'] ?>" class="card-img-top" alt="<?= $product['name'] ?>">
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <img src="path/to/image/<?php echo $product['product_id']; ?>.jpg" alt="Image" class="card-img-top"> <!-- Adjust this path -->
                         <div class="card-body">
-                            <h5 class="card-title"><?= $product['name'] ?></h5>
-                            <p class="card-text"><?= $product['description'] ?></p>
-                            <p class="card-text">Price: $<?= number_format($product['price'], 2) ?></p>
-                            <p class="card-text">Height: <?= $product['height'] ?> cm</p>
-                            <p class="card-text">Width: <?= $product['width'] ?> cm</p>
-                            <form method="post" action="test.php">
-                                <input type="hidden" name="id" value="<?= $product['id'] ?>">
-                                <input type="hidden" name="name" value="<?= $product['name'] ?>">
-                                <input type="hidden" name="description" value="<?= $product['description'] ?>">
-                                <input type="hidden" name="price" value="<?= $product['price'] ?>">
-                                <input type="hidden" name="height" value="<?= $product['height'] ?>">
-                                <input type="hidden" name="width" value="<?= $product['width'] ?>">
-                                <input type="hidden" name="image" value="<?= $product['image'] ?>">
-                                <button type="submit" class="btn btn-primary btn-dua">Add to Cart</button>
+                            <h5 class="card-title"><?php echo htmlspecialchars($product['product_name']); ?></h5>
+                            <p class="card-text"><?php echo htmlspecialchars($product['description']); ?></p>
+                            <p class="card-text"><strong>Price: $<?php echo number_format($product['price'], 2); ?></strong></p>
+                            <form method="POST">
+                                <input type="hidden" name="product_id" value="<?php echo $product['product_id']; ?>">
+                                <button type="submit" name="add_to_cart" class="btn btn-primary">Add to Cart</button>
                             </form>
                         </div>
                     </div>

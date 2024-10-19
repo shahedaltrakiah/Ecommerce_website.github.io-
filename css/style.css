@@ -1037,3 +1037,22 @@ textarea {
   border-radius: 50%;
   background: rgba(59, 93, 80, 0.2);
 }
+.cart-count {
+  position: absolute;
+  background: red;
+  color: white;
+  border-radius: 50%;
+  /* bottom: 20px; */
+  /* padding: 0px 0px; */
+  font-size: 10px;
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+  /* min-height: 26px; */
+  height: 24px;
+  margin: auto;
+  /* display: flex; */
+  justify-content: cena;
+  justify-content: center;
+
+}
