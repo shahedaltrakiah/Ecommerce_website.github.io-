@@ -1,3 +1,90 @@
+<?php
+session_start();
+$servername = "localhost";
+$username = "root";
+$password = "";
+$subtotal = 0; // Initialize subtotal
+$discountAmount = 0; // Initialize discount amount
+// when its zero hide the notficataion desing .] 
+
+try {
+    $conn = new PDO("mysql:host=$servername;dbname=ecommerce_db", $username, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch(PDOException $e) {
+    echo "Connection failed: " . $e->getMessage();
+}
+
+// Initialize the cart if it doesn't exist
+if (!isset($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
+}
+
+// Add products to cart
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
+    $productId = $_POST['product_id'];
+    $stmt = $conn->prepare("SELECT * FROM Product WHERE product_id = :product_id");
+    $stmt->execute(['product_id' => $productId]);
+    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($product) {
+        $_SESSION['cart'][$productId] = [
+            'name' => $product['product_name'],
+            'price' => $product['price'],
+            'quantity' => ($_SESSION['cart'][$productId]['quantity'] ?? 0) + 1,
+            'image' => $product['image'],
+            'description' => $product['description'],
+        ];
+    }
+}
+
+// Calculate subtotal
+foreach ($_SESSION['cart'] as $product) {
+    $subtotal += $product['price'] * $product['quantity'];
+}
+
+// Set subtotal in session to ensure it's updated
+$_SESSION['subtotal'] = $subtotal;
+
+// Apply coupon logic
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['apply_coupon'])) {
+    $couponCode = $_POST['coupon_code'];
+
+    // Fetch the coupon from the database
+    $stmt = $conn->prepare("SELECT discount_percentage, expiry_date FROM coupon WHERE code = :code");
+    $stmt->execute(['code' => $couponCode]);
+    $coupon = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Check if coupon exists and is not expired
+    if ($coupon) {
+        $currentDate = date('Y-m-d H:i:s');
+        if ($currentDate <= $coupon['expiry_date']) {
+            $discountPercentage = $coupon['discount_percentage'];
+            $discountAmount = ($subtotal * $discountPercentage) / 100;
+            $subtotal -= $discountAmount; // Update subtotal after applying discount
+            
+            // Store discount and updated subtotal in session
+            $_SESSION['discount'] = $discountAmount; 
+            $_SESSION['subtotal'] = $subtotal; // Store the new subtotal
+        } else {
+            $_SESSION['error_message'] = "Coupon has expired.";
+        }
+    } else {
+        $_SESSION['error_message'] = "Invalid coupon code.";
+    }
+}
+
+// Redirect to cart page only if not already there
+if (!isset($_SESSION['redirected'])) {
+    $_SESSION['redirected'] = true; // Prevents redirect loop
+    header("Location: cart.php");
+    exit();
+} else {
+    unset($_SESSION['redirected']); // Reset for the next request
+}
+?>
+
+
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -10,10 +97,11 @@
   <meta name="keywords" content="bootstrap, bootstrap4" />
 
 		<!-- Bootstrap CSS -->
-		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<link href="../css/bootstrap.min.css" rel="stylesheet">
 		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-		<link href="css/tiny-slider.css" rel="stylesheet">
-		<link href="css/style.css" rel="stylesheet">
+		<link href="../css/tiny-slider.css" rel="stylesheet">
+        <link href="../css/style.css" rel="stylesheet">
+
 		<title>Furni Free Bootstrap 5 Template for Furniture and Interior Design Websites by Untree.co </title>
 	</head>
 
@@ -42,33 +130,17 @@
 					</ul>
 
 					<ul class="custom-navbar-cta navbar-nav mb-2 mb-md-0 ms-5">
-						<li><a class="nav-link" href="#"><img src="images/user.svg"></a></li>
-						<li><a class="nav-link" href="cart.html"><img src="images/cart.svg"></a></li>
+                    <li><a class="nav-link" href="login.php"><i class="fa-solid fa-right-to-bracket"></i></a></li>
+                    <a class="nav-link" href="cart.php">
+        <img src="../images/cart.svg">
+        <span class="cart-count"><?php echo isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0; ?></span>
+    </a>
 					</ul>
 				</div>
 			</div>
 				
 		</nav>
 		<!-- End Header/Navigation -->
-
-		<!-- Start Hero Section -->
-			<div class="hero">
-				<div class="container">
-					<div class="row justify-content-between">
-						<div class="col-lg-5">
-							<div class="intro-excerpt">
-								<h1>Cart</h1>
-							</div>
-						</div>
-						<div class="col-lg-7">
-							
-						</div>
-					</div>
-				</div>
-			</div>
-		<!-- End Hero Section -->
-
-		
 
 		<div class="untree_co-section before-footer-section">
             <div class="container">
@@ -87,53 +159,24 @@
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <td class="product-thumbnail">
-                            <img src="images/product-1.png" alt="Image" class="img-fluid">
-                          </td>
-                          <td class="product-name">
-                            <h2 class="h5 text-black">Product 1</h2>
-                          </td>
-                          <td>$49.00</td>
-                          <td>
-                            <div class="input-group mb-3 d-flex align-items-center quantity-container" style="max-width: 120px;">
-                              <div class="input-group-prepend">
-                                <button class="btn btn-outline-black decrease" type="button">&minus;</button>
-                              </div>
-                              <input type="text" class="form-control text-center quantity-amount" value="1" placeholder="" aria-label="Example text with button addon" aria-describedby="button-addon1">
-                              <div class="input-group-append">
-                                <button class="btn btn-outline-black increase" type="button">&plus;</button>
-                              </div>
-                            </div>
-        
-                          </td>
-                          <td>$49.00</td>
-                          <td><a href="#" class="btn btn-black btn-sm">X</a></td>
-                        </tr>
-        
-                        <tr>
-                          <td class="product-thumbnail">
-                            <img src="images/product-2.png" alt="Image" class="img-fluid">
-                          </td>
-                          <td class="product-name">
-                            <h2 class="h5 text-black">Product 2</h2>
-                          </td>
-                          <td>$49.00</td>
-                          <td>
-                            <div class="input-group mb-3 d-flex align-items-center quantity-container" style="max-width: 120px;">
-                              <div class="input-group-prepend">
-                                <button class="btn btn-outline-black decrease" type="button">&minus;</button>
-                              </div>
-                              <input type="text" class="form-control text-center quantity-amount" value="1" placeholder="" aria-label="Example text with button addon" aria-describedby="button-addon1">
-                              <div class="input-group-append">
-                                <button class="btn btn-outline-black increase" type="button">&plus;</button>
-                              </div>
-                            </div>
-        
-                          </td>
-                          <td>$49.00</td>
-                          <td><a href="#" class="btn btn-black btn-sm">X</a></td>
-                        </tr>
+                      <?php if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])): ?>
+                        <?php foreach ($_SESSION['cart'] as $product_id => $product): ?>
+                            <?php
+                            $total = $product['price'] * $product['quantity'];
+                            $subtotal += $total;
+                            ?>
+                            <tr>
+                                <td class="product-thumbnail"><img src="path/to/image/<?php echo $product_id; ?>.jpg" alt="Image" class="img-fluid"></td>
+                                <td class="product-name"><?php echo htmlspecialchars($product['name']); ?></td>
+                                <td class="product-price">$<?php echo number_format($product['price'], 2); ?></td>
+                                <td class="product-quantity"><?php echo htmlspecialchars($product['quantity']); ?></td>
+                                <td class="product-total">$<?php echo number_format($total, 2); ?></td>
+                                <td class="product-remove"><a href="remove_from_cart.php?id=<?php echo urlencode($product_id); ?>">Remove</a></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr><td colspan="6" class="text-center">No items in the cart</td></tr>
+                    <?php endif; ?>
                       </tbody>
                     </table>
                   </div>
@@ -151,17 +194,19 @@
                     </div>
                   </div>
                   <div class="row">
-                    <div class="col-md-12">
-                      <label class="text-black h4" for="coupon">Coupon</label>
-                      <p>Enter your coupon code if you have one.</p>
-                    </div>
-                    <div class="col-md-8 mb-3 mb-md-0">
-                      <input type="text" class="form-control py-3" id="coupon" placeholder="Coupon Code">
-                    </div>
-                    <div class="col-md-4">
-                      <button class="btn btn-black">Apply Coupon</button>
-                    </div>
-                  </div>
+    <div class="col-md-12">
+        <label class="text-black h4" for="coupon">Coupon</label>
+        <p>Enter your coupon code if you have one.</p>
+    </div>
+    <form method="post">
+        <div class="col-md-8 mb-3 mb-md-0">
+            <input type="text" class="form-control py-3" id="coupon" name="coupon_code" placeholder="Coupon Code">
+        </div>
+        <div class="col-md-4">
+            <button type="submit" name="apply_coupon" class="btn btn-black">Apply Coupon</button>
+        </div>
+    </form>
+</div>
                 </div>
                 <div class="col-md-6 pl-5">
                   <div class="row justify-content-end">
@@ -171,26 +216,53 @@
                           <h3 class="text-black h4 text-uppercase">Cart Totals</h3>
                         </div>
                       </div>
-                      <div class="row mb-3">
-                        <div class="col-md-6">
-                          <span class="text-black">Subtotal</span>
-                        </div>
-                        <div class="col-md-6 text-right">
-                          <strong class="text-black">$230.00</strong>
-                        </div>
-                      </div>
-                      <div class="row mb-5">
-                        <div class="col-md-6">
-                          <span class="text-black">Total</span>
-                        </div>
-                        <div class="col-md-6 text-right">
-                          <strong class="text-black">$230.00</strong>
-                        </div>
-                      </div>
+                      <?php if (isset($_SESSION['error_message'])): ?>
+    <div class="alert alert-danger">
+        <?php echo $_SESSION['error_message']; ?>
+        <?php unset($_SESSION['error_message']); // Clear the message after displaying ?>
+    </div>
+<?php endif; ?>
+
+<div class="row mb-5">
+    <div class="col-md-6">
+        <span class="text-black">Subtotal</span>
+    </div>
+    <div class="col-md-6 text-right">
+        <strong class="text-black">$<?php echo number_format(isset($_SESSION['subtotal']) ? $_SESSION['subtotal'] : 0, 2); ?></strong>
+    </div>
+</div>
+
+<?php if (isset($_SESSION['discount'])): ?>
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <span class="text-black">Discount</span>
+        </div>
+        <div class="col-md-6 text-right">
+            <strong class="text-black">-$<?php echo number_format($_SESSION['discount'], 2); ?></strong>
+        </div>
+    </div>
+<?php endif; ?>
+
+<div class="row mb-5">
+    <div class="col-md-6">
+        <span class="text-black">Total</span>
+    </div>
+    <div class="col-md-6 text-right">
+        <strong class="text-black">
+            $<?php 
+            // Calculate the total as subtotal minus discount
+            $total = isset($_SESSION['subtotal']) ? $_SESSION['subtotal'] : 0;
+            $discount = isset($_SESSION['discount']) ? $_SESSION['discount'] : 0;
+            echo number_format(max(0, $total - $discount), 2); 
+            ?>
+        </strong>
+    </div>
+</div>
+  
         
                       <div class="row">
                         <div class="col-md-12">
-                          <button class="btn btn-black btn-lg py-3 btn-block" onclick="window.location='checkout.html'">Proceed To Checkout</button>
+                          <button class="btn btn-black btn-lg py-3 btn-block" onclick="window.location='checkout.php'">Proceed To Checkout</button>
                         </div>
                       </div>
                     </div>
@@ -206,7 +278,7 @@
 			<div class="container relative">
 
 				<div class="sofa-img">
-					<img src="images/sofa.png" alt="Image" class="img-fluid">
+					<img src="../images/sofa.png" alt="Image" class="img-fluid">
 				</div>
 
 				<div class="row">
@@ -307,9 +379,9 @@
 		<!-- End Footer Section -->	
 
 
-		<script src="js/bootstrap.bundle.min.js"></script>
-		<script src="js/tiny-slider.js"></script>
-		<script src="js/custom.js"></script>
+		<script src="../js/bootstrap.bundle.min.js"></script>
+		<script src="../js/tiny-slider.js"></script>
+		<script src="../js/custom.js"></script>
 	</body>
 
 </html>
