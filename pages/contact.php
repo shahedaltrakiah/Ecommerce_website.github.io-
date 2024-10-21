@@ -26,7 +26,7 @@
 	<nav class="custom-navbar navbar navbar navbar-expand-md navbar-dark bg-dark" arial-label="Furni navigation bar">
 
 		<div class="container">
-			<a class="navbar-brand" href="../index.html"><img class="logo-img" src="../images/Logo"
+			<a class="navbar-brand" href="../index.php"><img class="logo-img" src="../images/Logo"
 					style="max-width:150px;"></a>
 
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsFurni"
@@ -60,7 +60,7 @@
 			<div class="row justify-content-between">
 				<div class="intro-excerpt">
 					<h1 style="margin-bottom: 10px; margin-top: -30px;">Contact</h1>
-					<p class="mb-4">We would love to hear from you.</p>
+					<p style="font-size: 15px;">We would love to hear from you.</p>
 				</div>
 			</div>
 		</div>
@@ -71,7 +71,6 @@
 	<!-- Start Contact Form -->
 	<div class="untree_co-section">
 		<div class="container">
-
 			<div class="block">
 				<div class="row justify-content-center">
 					<div class="col-md-8 col-lg-8 pb-4">
@@ -132,27 +131,27 @@
 									<div class="form-group">
 										<label class="text-black" for="first_name"></label>
 										<input type="text" class="form-control" id="fname" name="first_name"
-											placeholder="First name" >
+											placeholder="First name">
 									</div>
 								</div>
 								<div class="col-6">
 									<div class="form-group">
 										<label class="text-black" for="last_name"></label>
 										<input type="text" class="form-control" id="lname" name="last_name"
-											placeholder="Last name" >
+											placeholder="Last name">
 									</div>
 								</div>
 							</div>
 							<div class="form-group">
 								<label class="text-black" for="email"></label>
 								<input type="email" class="form-control" id="email" name="email"
-									placeholder="Email address" >
+									placeholder="Email address">
 							</div>
 
 							<div class="form-group mb-5">
 								<label class="text-black" for="message"></label>
 								<textarea class="form-control" id="message" name="message" placeholder="Message"
-									cols="30" rows="5" ></textarea>
+									cols="30" rows="5"></textarea>
 							</div>
 
 							<button type="submit" class="btn btn-primary-hover-outline">Send Message</button>
@@ -169,7 +168,7 @@
 
 	<!-- Start Footer Section -->
 	<footer class="footer-section">
-		<div class="container relative">
+		<div class="container relative" style="margin-bottom: -50px;">
 
 			<div class="sofa-img">
 				<img src="../images/sofa.png" alt="Image" class="img-fluid">
@@ -178,24 +177,6 @@
 			<div class="row">
 				<div class="col-lg-8">
 					<div class="subscription-form">
-						<h3 class="d-flex align-items-center"><span class="me-1"><img
-									src="../images/envelope-outline.svg" alt="Image"
-									class="img-fluid"></span><span>Subscribe to Newsletter</span></h3>
-
-						<form action="#" class="row g-3">
-							<div class="col-auto">
-								<input type="text" class="form-control" placeholder="Enter your name">
-							</div>
-							<div class="col-auto">
-								<input type="email" class="form-control" placeholder="Enter your email">
-							</div>
-							<div class="col-auto">
-								<button class="btn btn-primary">
-									<span class="fa fa-paper-plane"></span>
-								</button>
-							</div>
-						</form>
-
 					</div>
 				</div>
 			</div>
@@ -203,9 +184,10 @@
 			<div class="row g-5 mb-5">
 				<div class="col-lg-4">
 					<div class="mb-4 footer-logo-wrap"><a href="#" class="footer-logo">Nest & Buy </a></div>
-					<p class="mb-4">Donec facilisis quam ut purus rutrum lobortis. Donec vitae odio quis nisl dapibus
-						malesuada. Nullam ac aliquet velit. Aliquam vulputate velit imperdiet dolor tempor tristique.
-						Pellentesque habitant</p>
+					<p class="mb-4">At Nest & Buy, we bring you stylish, high-quality furniture to make your home cozy
+						and beautiful. With a focus on craftsmanship and design, we’re here to help you create spaces
+						you love.
+					</p>
 
 					<ul class="list-unstyled custom-social">
 						<li><a href="#"><span class="fa fa-brands fa-facebook-f"></span></a></li>
@@ -228,7 +210,7 @@
 						<div class="col-6 col-sm-6 col-md-3">
 							<ul class="list-unstyled">
 								<li><a href="#">Testimonials</a></li>
-								<li><a href="#">Our team</a></li>
+								<li><a href="about.html#ourTeam">Our team</a></li>
 								<li><a href="#">Live chat</a></li>
 							</ul>
 						</div>
@@ -266,10 +248,8 @@
 							<li><a href="#">Privacy Policy</a></li>
 						</ul>
 					</div>
-
 				</div>
 			</div>
-
 		</div>
 	</footer>
 	<!-- End Footer Section -->
