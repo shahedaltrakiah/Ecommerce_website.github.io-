@@ -1,19 +1,6 @@
 <?php
 session_start(); // Start the session to access cart data
-
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "ecommerce_db"; // Your database name
-
-try {
-    $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-    echo "Connection failed: " . $e->getMessage();
-    exit();
-}
-
+include "../includes/db.php";
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get form data
@@ -25,6 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['c_email_address'];
     $phone = $_POST['c_phone'];
     $orderNotes = $_POST['c_order_notes'];
+	$couponCode = $_POST['coupon_code'] ?? '';
 
     // Calculate total amount from cart items
     $totalAmount = 0;
@@ -33,9 +21,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $totalAmount += $item['price'] * $item['quantity']; // Assuming each item has 'price' and 'quantity'
         }
     }
+	$discount = 0; // Initialize discount amount
+    if (!empty($couponCode)) {
+        $stmt = $conn->prepare("SELECT * FROM coupons WHERE code = :code");
+        $stmt->execute(['code' => $couponCode]);
+        $coupon = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($coupon && $coupon['usage_limit'] > 0) {
+            // Apply discount logic here, for example:
+            $discount = $coupon['discount_amount']; // Assume there's a discount_amount column
+            $totalAmount -= $discount; // Subtract discount from total amount
+
+            // Decrement usage limit
+            $stmt = $conn->prepare("UPDATE coupons SET usage_limit = usage_limit - 1 WHERE code = :code");
+            $stmt->execute(['code' => $couponCode]);
+        }
+    }
 
     // Insert order into the database
-    $sql = "INSERT INTO `Order` (customer_id, total_amount, status) VALUES (:customer_id, :total_amount, 'pending')";
+    $sql = "INSERT INTO `orders` (customer_id, total_amount, status) VALUES (:customer_id, :total_amount, 'pending')";
     $stmt = $conn->prepare($sql);
     
     // Assuming you have a way to get customer_id
@@ -49,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Insert order items into order_items table
         foreach ($_SESSION['cart'] as $item) {
-            $sql = "INSERT INTO Order_Item (order_id, product_id, quantity, price) VALUES (:order_id, :product_id, :quantity, :price)";
+            $sql = "INSERT INTO orderitems (order_id, product_id, quantity, price) VALUES (:order_id, :product_id, :quantity, :price)";
             $stmt = $conn->prepare($sql);
             $stmt->bindParam(':order_id', $orderId);
             $stmt->bindParam(':product_id', $item['product_id']);
@@ -59,7 +63,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // Clear the cart after order is placed
-        unset($_SESSION['cart']);
+		unset($_SESSION['cart']);
+        unset($_SESSION['subtotal']);
+        unset($_SESSION['discounts']);
+        unset($_SESSION['applied_coupons']);
+
 
         // Redirect to thank you page
         header("Location: thankyou.html");

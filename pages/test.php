@@ -1,17 +1,8 @@
 <?php
 session_start();
-$servername = "localhost";
-$username = "root";
-$password = "";
+include "../includes/db.php";
 
-try {
-    $conn = new PDO("mysql:host=$servername;dbname=ecommerce_db", $username, $password);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-    echo "Connection failed: " . $e->getMessage();
-}
-
-$query = "SELECT * FROM Product";
+$query = "SELECT * FROM Products";
 $stmt = $conn->query($query);
 $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -19,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
     $productId = $_POST['product_id'];
 
     // Fetch product details from the database
-    $stmt = $conn->prepare("SELECT * FROM Product WHERE product_id = :product_id");
+    $stmt = $conn->prepare("SELECT * FROM Products WHERE product_id = :product_id");
     $stmt->execute(['product_id' => $productId]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 

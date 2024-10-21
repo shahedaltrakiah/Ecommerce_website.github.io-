@@ -1,18 +1,8 @@
 <?php
 session_start();
-$servername = "localhost";
-$username = "root";
-$password = "";
+include "../includes/db.php";
 $subtotal = 0; // Initialize subtotal
-$discountAmount = 0; // Initialize discount amount
-// when its zero hide the notficataion desing .] 
-
-try {
-    $conn = new PDO("mysql:host=$servername;dbname=ecommerce_db", $username, $password);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-    echo "Connection failed: " . $e->getMessage();
-}
+$discountAmount = 0; 
 
 // Initialize the cart if it doesn't exist
 if (!isset($_SESSION['cart'])) {
@@ -22,7 +12,7 @@ if (!isset($_SESSION['cart'])) {
 // Add products to cart
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
     $productId = $_POST['product_id'];
-    $stmt = $conn->prepare("SELECT * FROM Product WHERE product_id = :product_id");
+    $stmt = $conn->prepare("SELECT * FROM products WHERE product_id = :product_id");
     $stmt->execute(['product_id' => $productId]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -46,32 +36,63 @@ foreach ($_SESSION['cart'] as $product) {
 $_SESSION['subtotal'] = $subtotal;
 
 // Apply coupon logic
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['apply_coupon'])) {
-    $couponCode = $_POST['coupon_code'];
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+  if (isset($_POST['apply_coupon'])) {
+      $couponCode = $_POST['coupon_code'];
 
-    // Fetch the coupon from the database
-    $stmt = $conn->prepare("SELECT discount_percentage, expiry_date FROM coupon WHERE code = :code");
-    $stmt->execute(['code' => $couponCode]);
-    $coupon = $stmt->fetch(PDO::FETCH_ASSOC);
+      // Fetch the coupon from the database
+      $stmt = $conn->prepare("SELECT discount, expiration_date FROM coupons WHERE code = :code");
+      $stmt->execute(['code' => $couponCode]);
+      $coupon = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // Check if coupon exists and is not expired
-    if ($coupon) {
-        $currentDate = date('Y-m-d H:i:s');
-        if ($currentDate <= $coupon['expiry_date']) {
-            $discountPercentage = $coupon['discount_percentage'];
-            $discountAmount = ($subtotal * $discountPercentage) / 100;
-            $subtotal -= $discountAmount; // Update subtotal after applying discount
-            
-            // Store discount and updated subtotal in session
-            $_SESSION['discount'] = $discountAmount; 
-            $_SESSION['subtotal'] = $subtotal; // Store the new subtotal
-        } else {
-            $_SESSION['error_message'] = "Coupon has expired.";
-        }
-    } else {
-        $_SESSION['error_message'] = "Invalid coupon code.";
-    }
+      // Check if coupon exists and is not expired
+      if ($coupon) {
+          $currentDate = date('Y-m-d H:i:s');
+          if ($currentDate <= $coupon['expiry_date']) {
+              // Initialize the applied_coupons array in the session if it doesn't exist
+              if (!isset($_SESSION['applied_coupons'])) {
+                  $_SESSION['applied_coupons'] = [];
+              }
+
+              // Add coupon to the session array if not already applied
+              if (!in_array($couponCode, $_SESSION['applied_coupons'])) {
+                  $_SESSION['applied_coupons'][] = $couponCode;
+                  $_SESSION['discounts'][$couponCode] = ($subtotal * $coupon['discount_percentage']) / 100;
+
+                  // Update subtotal after applying discount
+                  $subtotal -= $_SESSION['discounts'][$couponCode];
+                  $_SESSION['subtotal'] = $subtotal; // Store the new subtotal
+              } else {
+                  $_SESSION['error_message'] = "Coupon has already been applied.";
+              }
+          } else {
+              $_SESSION['error_message'] = "Coupon has expired.";
+          }
+      } else {
+          $_SESSION['error_message'] = "Invalid coupon code.";
+      }
+  } elseif (isset($_POST['remove_coupon'])) {
+      $couponCode = $_POST['coupon_code'];
+
+      // Check if the coupon is applied
+      if (in_array($couponCode, $_SESSION['applied_coupons'])) {
+          // Remove the coupon from the session
+          $key = array_search($couponCode, $_SESSION['applied_coupons']);
+          unset($_SESSION['applied_coupons'][$key]);
+
+          // Calculate and remove the discount from the subtotal
+          $discountAmount = $_SESSION['discounts'][$couponCode];
+          $subtotal += $discountAmount; // Revert the subtotal
+
+          // Remove the discount from the session
+          unset($_SESSION['discounts'][$couponCode]);
+          $_SESSION['subtotal'] = $subtotal; // Update the subtotal in the session
+      } else {
+          $_SESSION['error_message'] = "Coupon not found in applied coupons.";
+      }
+  }
 }
+
 
 // Redirect to cart page only if not already there
 if (!isset($_SESSION['redirected'])) {
@@ -120,13 +141,12 @@ if (!isset($_SESSION['redirected'])) {
 				<div class="collapse navbar-collapse" id="navbarsFurni">
 					<ul class="custom-navbar-nav navbar-nav ms-auto mb-2 mb-md-0">
 						<li class="nav-item ">
-							<a class="nav-link" href="index.html">Home</a>
+							<a class="nav-link" href="../index.php ">Home</a>
 						</li>
-						<li><a class="nav-link" href="shop.html">Shop</a></li>
+						<li><a class="nav-link" href="../pages/shop.php">Shop</a></li>
 						<li><a class="nav-link" href="about.html">About us</a></li>
 						<li><a class="nav-link" href="services.html">Services</a></li>
-						<li><a class="nav-link" href="blog.html">Blog</a></li>
-						<li><a class="nav-link" href="contact.html">Contact us</a></li>
+						<li><a class="nav-link" href="../pages/contact.php">Contact us</a></li>
 					</ul>
 
 					<ul class="custom-navbar-cta navbar-nav mb-2 mb-md-0 ms-5">
