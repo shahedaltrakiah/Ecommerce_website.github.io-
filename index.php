@@ -54,6 +54,30 @@
     </nav>
     <!-- End Header/Navigation -->
 
+    <!-- Start Hero Section -->
+    <div class="hero">
+        <div class="container">
+            <div class="row justify-content-between">
+                <div class="col-lg-5">
+                    <div class="intro-excerpt">
+                        <h1>Modern Interior <span clsas="d-block">Design Studio</span></h1>
+                        <p class="mb-4">Transforming your vision into stunning, personalized spaces. Let’s create your
+                            dream environment together!</p>
+                        <p><a href="pages/login.php" class="btn btn-secondary me-2">Shop Now</a>
+                            <a href="pages/shop.php" class="btn btn-white-outline">Explore</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="hero-img-wrap">
+                        <img src="images/couch.png" class="img-fluid">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Hero Section -->
+
     <!-- Start Product Slider Section -->
     <div class="product-section untree_co-section">
         <div class="container">
@@ -66,7 +90,7 @@
             </div>
 
             <!-- Slider -->
-            <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div id="productCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
                 <div class="carousel-inner">
                     <!-- First slide with 4 products -->
                     <div class="carousel-item active">
@@ -130,40 +154,56 @@
                             <div class="col-lg-3 col-md-4 mb-4">
                                 <div class="team-member text-center category-card">
                                     <a class="category-item" href="category.html">
-                                        <img src="images/chairs.jpeg" class="img-fluid" alt="Chairs">
-                                        <h3 class="category-title">Chairs</h3>
+                                        <img src="images/sofas.jpeg" class="img-fluid" alt="Sofas">
+                                        <h3 class="category-title">Sofas</h3>
                                     </a>
                                 </div>
                             </div>
+
                             <div class="col-lg-3 col-md-4 mb-4">
                                 <div class="team-member text-center category-card">
                                     <a class="category-item" href="category.html">
-                                        <img src="images/nursery_furniture.jpeg" class="img-fluid"
-                                            alt="Nursery Furniture">
-                                        <h3 class="category-title">Nursery Furniture</h3>
+                                        <img src="images/tables_desks.jpeg" class="img-fluid" alt="Tables & Desks">
+                                        <h3 class="category-title">Tables & Desks</h3>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="carousel-item">
+                        <div class="row justify-content-center g-5">
+                            <div class="col-lg-3 col-md-4 mb-4">
+                                <div class="team-member text-center category-card">
+                                    <a class="category-item" href="category.html">
+                                        <img src="images/room_dividers.jpeg" class="img-fluid" alt="Room Dividers">
+                                        <h3 class="category-title">Room Dividers</h3>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-md-4 mb-4">
+                                <div class="team-member text-center category-card">
+                                    <a class="category-item" href="category.html">
+                                        <img src="images/trolleys.jpeg" class="img-fluid" alt="Trolleys">
+                                        <h3 class="category-title">Trolleys</h3>
                                     </a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Custom pagination -->
-                <div class="carousel-controls">
-                    <div class="text-center mt-4">
-                        <a href="#" class="carousel-control-prev" data-bs-target="#productCarousel"
-                            data-bs-slide="prev">Previous</a>
-                        |
-                        <a href="#" class="carousel-control-next" data-bs-target="#productCarousel"
-                            data-bs-slide="next">Next</a>
-                    </div>
+                <div class="carousel-controls text-center mt-4">
+                    <a href="#" class="carousel-control-prev" data-bs-target="#productCarousel"
+                        data-bs-slide="prev">Previous</a>
+                       <a > Previous </a> |  Next
+                    <a href="#" class="carousel-control-next" data-bs-target="#productCarousel"
+                        data-bs-slide="next">Next</a>
                 </div>
-
             </div>
         </div>
     </div>
     <!-- End Product Slider Section -->
-
 
 
     <!-- Start Why Choose Us Section -->
@@ -243,10 +283,10 @@
     <!-- End Why Choose Us Section -->
 
     <!-- awesome_shop start -->
-    <section class="our_offer" style="margin-bottom: 70px;">
+    <section class="our_offer why-choose-section" style="margin-bottom: 70px;">
         <div class="container">
             <div class="row align-items-center justify-content-between">
-                <div class="col-lg-6 col-md-6">
+                <div class="col-lg-4 col-md-4">
                     <div class="offer_img">
                         <img src="images/offer_img.png" alt="" style="max-width:400px;">
                     </div>
