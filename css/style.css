@@ -1207,11 +1207,11 @@ a {
   text-transform: uppercase;
 }
 
-#basic-addon2 :hover {
+#basic-addon2:hover {
   background-color: #f9be2981;
   color: #000;
-
 }
+
 
 @media (max-width: 991px) {
   .our_offer .input-group .input-group-text {
