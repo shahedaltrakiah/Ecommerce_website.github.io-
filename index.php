@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="shortcut icon" href="images/logoo">
+    <link rel="shortcut icon" href="images/logo">
 
     <meta name="description" content="" />
     <meta name="keywords" content="bootstrap, bootstrap4" />
@@ -46,7 +46,12 @@
 
                 <ul class="custom-navbar-cta navbar-nav mb-2 mb-md-0 ms-5">
                     <li><a class="nav-link" href="pages/login.php"><i class="fa-solid fa-right-to-bracket"></i></a></li>
-                    <li><a class="nav-link" href="pages/cart.php"><img src="images/cart.svg"></a></li>
+                    <li><a class="nav-link" href="pages/cart.php">
+                            <img src="images/cart.svg">
+                            <span
+                                class="cart-count"><?php echo isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0; ?></span>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -194,11 +199,6 @@
                     </div>
                 </div>
                 <div class="carousel-controls text-center mt-4">
-                    <a href="#" class="carousel-control-prev" data-bs-target="#productCarousel"
-                        data-bs-slide="prev">Previous</a>
-                       <a > Previous </a> |  Next
-                    <a href="#" class="carousel-control-next" data-bs-target="#productCarousel"
-                        data-bs-slide="next">Next</a>
                 </div>
             </div>
         </div>
@@ -307,10 +307,11 @@
                             </div>
                         </div>
                         <div class="input-group">
-                            <input type="text" class="form-control" placeholder="Enter email address"
-                                aria-label="Recipient's username" aria-describedby="basic-addon2">
+                            <!-- <input type="text" class="form-control" placeholder="Enter email address"
+                                aria-label="Recipient's username" aria-describedby="basic-addon2"> -->
                             <div class="input-group-append">
-                                <a href="#" class="input-group-text btn_2" id="basic-addon2">Book Now</a>
+                                <a href="pages/shop.php" class="input-group-text btn btn-secondary me-2"
+                                    id="basic-addon2">SHOP NOW</a>
                             </div>
                         </div>
                     </div>
@@ -355,72 +356,94 @@
     </div>
     <!-- End We Help Section -->
 
+    <?php
+    // Include database connection
+    include_once 'includes/db.php';
+
+    // Create a new instance of the Database class and get the connection
+    $database = new Database();
+    $db = $database->getConnection();
+
+    // SQL Query to fetch one product from each category
+    $query = "
+    SELECT p.product_id, p.product_name, p.price, 
+           (SELECT pi.image_url FROM productimages pi WHERE pi.product_id = p.product_id LIMIT 1) AS image_url,
+           c.category_name
+    FROM products p
+    JOIN categories c ON p.category_id = c.category_id
+    GROUP BY c.category_id
+    LIMIT 8";  // Limit the result to 10 categories
+    
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+
+    // Fetch all products
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    ?>
+
     <!-- Start Popular Product -->
     <div class="popular-product product-section">
         <div class="container">
             <h2 class="section-title mb-5">Best Sellers</h2>
-            <div class="row">
+            <div id="popularProductSlider" class="carousel slide testimonial-slider-wrap text-center"
+                data-bs-ride="carousel" data-bs-interval="3000">
 
-                <!-- Start Column 1 -->
-                <div class="col-md-12 col-lg-3 mb-5 mb-lg-0">
-                    <a class="product-item" href="cart.html">
-                        <img src="images/product-1.png" class="img-fluid product-thumbnail">
-                        <h3 class="product-title">Nordic Chair</h3>
-                        <strong class="product-price">$50.00</strong>
+                <div class="row justify-content-center">
 
-                        <span class="icon-cross">
-                            <img src="images/cross.svg" class="img-fluid">
+
+                    <!-- Carousel Controls -->
+                    <div id="testimonial-nav" style="margin-top: -80px;">
+                        <span class="carousel-control-prev" type="button" data-bs-target="#popularProductSlider"
+                            data-bs-slide="prev"><span class="fa fa-chevron-left"></span>
                         </span>
-                    </a>
+                        <span class="carousel-control-next" type="button" data-bs-target="#popularProductSlider"
+                            data-bs-slide="next">
+                            <span class="fa fa-chevron-right"></span></span>
+                    </div>
+
+
+                    <div class="carousel-inner ">
+                        <div class="col-lg-10 mx-auto">
+                            <?php if (count($products) > 0): ?>
+                                <?php
+                                $isFirst = true; // To set the active class on the first item
+                                foreach ($products as $index => $product):
+                                    // Start a new carousel item every 4 products
+                                    if ($index % 4 === 0):
+                                        if ($index > 0)
+                                            echo "</div></div>"; // Close previous item if not first
+                                        echo "<div class='carousel-item " . ($isFirst ? 'active' : '') . "'>";
+                                        echo "<div class='row'>";
+                                        $isFirst = false; // After first iteration
+                                    endif;
+                                    ?>
+                                    <div class='col-12 col-md-4 col-lg-3 mb-5'>
+                                        <a class='product-item'
+                                            href='productdetails.php?id=<?= htmlspecialchars($product['product_id']); ?>'>
+                                            <img width='261px' height='261px'
+                                                src='http://localhost/Ecommerce_website.github.io-/<?= !empty($product['image_url']) ? htmlspecialchars($product['image_url']) : 'path/to/default/image.jpg'; ?>'
+                                                class='img-fluid product-thumbnail'
+                                                alt='<?= !empty($product['product_name']) ? htmlspecialchars($product['product_name']) : 'No Product'; ?>'>
+                                            <h3 class='product-title'><?= htmlspecialchars($product['product_name']); ?></h3>
+                                            <strong class='product-price'>$<?= htmlspecialchars($product['price']); ?></strong>
+
+                                            <span class="icon-cross">
+                                                <img src="images/cross.svg" class="img-fluid">
+                                            </span>
+                                        </a>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div> <!-- Close last row and item -->
+                    <?php else: ?>
+                        <p class="text-center">No products found matching your criteria.</p>
+                    <?php endif; ?>
                 </div>
-
-                <!-- End Column 1 -->
-
-                <!-- Start Column 2 -->
-                <div class="col-12 col-md-4 col-lg-3 mb-5 mb-md-0">
-                    <a class="product-item" href="cart.html">
-                        <img src="images/product-1.png" class="img-fluid product-thumbnail">
-                        <h3 class="product-title">Nordic Chair</h3>
-                        <strong class="product-price">$50.00</strong>
-
-                        <span class="icon-cross">
-                            <img src="images/cross.svg" class="img-fluid">
-                        </span>
-                    </a>
-                </div>
-                <!-- End Column 2 -->
-
-                <!-- Start Column 3 -->
-                <div class="col-12 col-md-4 col-lg-3 mb-5 mb-md-0">
-                    <a class="product-item" href="cart.html">
-                        <img src="images/product-2.png" class="img-fluid product-thumbnail">
-                        <h3 class="product-title">Kruzo Aero Chair</h3>
-                        <strong class="product-price">$78.00</strong>
-
-                        <span class="icon-cross">
-                            <img src="images/cross.svg" class="img-fluid">
-                        </span>
-                    </a>
-                </div>
-                <!-- End Column 3 -->
-
-                <!-- Start Column 4 -->
-                <div class="col-12 col-md-4 col-lg-3 mb-5 mb-md-0">
-                    <a class="product-item" href="cart.html">
-                        <img src="images/product-3.png" class="img-fluid product-thumbnail">
-                        <h3 class="product-title">Ergonomic Chair</h3>
-                        <strong class="product-price">$43.00</strong>
-
-                        <span class="icon-cross">
-                            <img src="images/cross.svg" class="img-fluid">
-                        </span>
-                    </a>
-                </div>
-                <!-- End Column 4 -->
             </div>
         </div>
     </div>
     <!-- End Popular Product -->
+
 
     <!-- Start Testimonial Slider -->
     <div class="testimonial-section">
@@ -435,10 +458,10 @@
                 <div class="col-lg-12">
                     <div class="testimonial-slider-wrap text-center">
 
-                        <div id="testimonial-nav">
+                        <!-- <div id="testimonial-nav">
                             <span class="prev" data-controls="prev"><span class="fa fa-chevron-left"></span></span>
                             <span class="next" data-controls="next"><span class="fa fa-chevron-right"></span></span>
-                        </div>
+                        </div> -->
 
                         <div class="testimonial-slider">
 
@@ -518,9 +541,7 @@
                                 </div>
                             </div>
                             <!-- END item -->
-
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -543,15 +564,14 @@
                         <h3 class="d-flex align-items-center"><span class="me-1"><img src="images/envelope-outline.svg"
                                     alt="Image" class="img-fluid"></span><span>Subscribe to Newsletter</span></h3>
 
-                        <form action="php/process_contact.php" method="POST" onsubmit="return validateSubscribeForm()"
-                            class="row g-3">
+                        <form class="row g-3" id="subscribeForm">
                             <div class="col-auto">
                                 <input type="text" class="form-control" placeholder="Enter your name" id="name"
-                                    name="first_name" required>
+                                    name="first_name">
                             </div>
                             <div class="col-auto">
                                 <input type="email" class="form-control" placeholder="Enter your email" id="email"
-                                    name="email" required>
+                                    name="email">
                             </div>
                             <div class="col-auto" style="margin-top: 25px;">
                                 <button type="submit" class="btn btn-primary">
