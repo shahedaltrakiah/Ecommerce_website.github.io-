@@ -1,7 +1,8 @@
 <?php
 session_start();
 include "../includes/db.php";
-
+$database = new Database();
+$conn = $database->getConnection();
 // Initialize the wishlist session array if it doesn't exist
 if (!isset($_SESSION['wishlists'])) {
     $_SESSION['wishlists'] = []; // Ensure this is always an array
