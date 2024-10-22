@@ -1,7 +1,8 @@
 <?php
 session_start();
 include "../includes/db.php";
-
+$database = new Database();
+$conn = $database->getConnection();
 $query = "SELECT * FROM Products";
 $stmt = $conn->query($query);
 $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
