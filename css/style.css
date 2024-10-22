@@ -1118,17 +1118,6 @@ a {
   transform: scale(1.05);
 }
 
-.carousel-control-prev,
-.carousel-control-next {
-  background-color: transparent;
-  border: none;
-}
-
-.carousel-control-prev:hover,
-.carousel-control-next:hover {
-  background-color: #ddd;
-}
-
 
 /************* our offer *****************/
 
@@ -1188,7 +1177,7 @@ a {
   height: 60px;
   padding-left: 25px;
   border: 0px solid transparent;
-  background-color: #f9be2944;
+  border: 1px solid #F9BF29;
 }
 
 .our_offer .input-group input::placeholder {
