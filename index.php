@@ -388,59 +388,57 @@
             <div id="popularProductSlider" class="carousel slide testimonial-slider-wrap text-center"
                 data-bs-ride="carousel" data-bs-interval="3000">
 
-                <div class="row justify-content-center">
-
-
-                    <!-- Carousel Controls -->
-                    <div id="testimonial-nav" style="margin-top: -80px;">
-                        <span class="carousel-control-prev" type="button" data-bs-target="#popularProductSlider"
-                            data-bs-slide="prev"><span class="fa fa-chevron-left"></span>
-                        </span>
-                        <span class="carousel-control-next" type="button" data-bs-target="#popularProductSlider"
-                            data-bs-slide="next">
-                            <span class="fa fa-chevron-right"></span></span>
-                    </div>
-
-
-                    <div class="carousel-inner ">
-                        <div class="col-lg-10 mx-auto">
-                            <?php if (count($products) > 0): ?>
-                                <?php
-                                $isFirst = true; // To set the active class on the first item
-                                foreach ($products as $index => $product):
-                                    // Start a new carousel item every 4 products
-                                    if ($index % 4 === 0):
-                                        if ($index > 0)
-                                            echo "</div></div>"; // Close previous item if not first
-                                        echo "<div class='carousel-item " . ($isFirst ? 'active' : '') . "'>";
-                                        echo "<div class='row'>";
-                                        $isFirst = false; // After first iteration
-                                    endif;
-                                    ?>
-                                    <div class='col-12 col-md-4 col-lg-3 mb-5'>
-                                        <a class='product-item'
-                                            href='productdetails.php?id=<?= htmlspecialchars($product['product_id']); ?>'>
-                                            <img width='261px' height='261px'
-                                                src='http://localhost/Ecommerce_website.github.io-/<?= !empty($product['image_url']) ? htmlspecialchars($product['image_url']) : 'path/to/default/image.jpg'; ?>'
-                                                class='img-fluid product-thumbnail'
-                                                alt='<?= !empty($product['product_name']) ? htmlspecialchars($product['product_name']) : 'No Product'; ?>'>
-                                            <h3 class='product-title'><?= htmlspecialchars($product['product_name']); ?></h3>
-                                            <strong class='product-price'>$<?= htmlspecialchars($product['price']); ?></strong>
-
-                                            <span class="icon-cross">
-                                                <img src="images/cross.svg" class="img-fluid">
-                                            </span>
-                                        </a>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div> <!-- Close last row and item -->
-                    <?php else: ?>
-                        <p class="text-center">No products found matching your criteria.</p>
-                    <?php endif; ?>
+                <!-- Carousel Controls -->
+                <div id="testimonial-nav" style="margin-top: -80px;">
+                    <span class="carousel-control-prev" type="button" data-bs-target="#popularProductSlider"
+                        data-bs-slide="prev"><span class="fa fa-chevron-left"></span>
+                    </span>
+                    <span class="carousel-control-next" type="button" data-bs-target="#popularProductSlider"
+                        data-bs-slide="next">
+                        <span class="fa fa-chevron-right"></span></span>
                 </div>
+
+                <div class="carousel-inner">
+                    <div class="col-lg-10 mx-auto">
+                        <?php if (count($products) > 0): ?>
+                            <?php
+                            $isFirst = true; // To set the active class on the first item
+                            foreach ($products as $index => $product):
+                                // Start a new carousel item every 4 products
+                                if ($index % 4 === 0):
+                                    if ($index > 0)
+                                        echo "</div></div>"; // Close previous item if not first
+                                    echo "<div class='carousel-item " . ($isFirst ? 'active' : '') . "'>";
+                                    echo "<div class='row'>";
+                                    $isFirst = false; // After first iteration
+                                endif;
+                                ?>
+                                <div class='col-12 col-md-4 col-lg-3 mb-5'>
+                                    <a class='product-item'
+                                        href='productdetails.php?id=<?= htmlspecialchars($product['product_id']); ?>'>
+                                        <img width='261px' height='261px'
+                                            src='http://localhost/Ecommerce_website.github.io-/<?= !empty($product['image_url']) ? htmlspecialchars($product['image_url']) : 'path/to/default/image.jpg'; ?>'
+                                            class='img-fluid product-thumbnail'
+                                            alt='<?= !empty($product['product_name']) ? htmlspecialchars($product['product_name']) : 'No Product'; ?>'>
+                                        <h3 class='product-title'><?= htmlspecialchars($product['product_name']); ?></h3>
+                                        <strong class='product-price'>$<?= htmlspecialchars($product['price']); ?></strong>
+
+                                        <span class="icon-cross">
+                                            <img src="images/cross.svg" class="img-fluid">
+                                        </span>
+                                    </a>
+                                </div>
+                            <?php endforeach; ?>
+                            <!-- Ensure to close the last opened carousel and row -->
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <p class="text-center">No products found matching your criteria.</p>
+                <?php endif; ?>
             </div>
         </div>
+    </div>
+    </div>
     </div>
     <!-- End Popular Product -->
 
@@ -552,7 +550,7 @@
 
     <!-- Start Footer Section -->
     <footer class="footer-section">
-        <div class="container relative" style="margin-bottom: -50px; margin-top: 50px;">
+        <div class="container relative" style="margin-top: 50px;">
 
             <div class="sofa-img">
                 <img src="images/sofa.png" alt="Image" class="img-fluid">
