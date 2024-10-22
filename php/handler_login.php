@@ -41,7 +41,7 @@ if (postMethod()) {
                 sessionStore('user', $userData);
                 removeSession("signInErrors");
                 removeSession("signUpErrors");
-                header("Location: ../profile.php");
+                // header("Location: ../profile.php");
                 
                 exit();
             } else {
@@ -54,7 +54,7 @@ if (postMethod()) {
 
     if (!empty($errors)) {
         sessionStore("signInErrors", $errors);
-        header("Location: ../index.php");
+        // header("Location: ../index.php");
         exit();
     }
 } else {
