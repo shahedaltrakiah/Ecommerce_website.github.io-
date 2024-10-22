@@ -1,5 +1,5 @@
 <?php
-$dsn = 'mysql:host=localhost;dbname=ecommerce_db1';
+$dsn = 'mysql:host=localhost;dbname=ecommerce_db';
 $username = 'root';
 $password = ''; 
 
@@ -191,7 +191,7 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="col-12 col-md-4 col-lg-3 mb-5">
                         <a class="product-item" href="productdetails.php?id=<?= htmlspecialchars($product['product_id']); ?>">
                             <!-- Adjusted the image path to include the full web path -->
-                            <img  width="261px" height="261px" src="http://localhost/project3/Ecommerce_website.github.io-/<?= htmlspecialchars($product['image_url']); ?>" class="img-fluid product-thumbnail" alt="<?= htmlspecialchars($product['product_name']);?>">
+                            <img  width="261px" height="261px" src="http://localhost/Ecommerce_website.github.io-\<?= htmlspecialchars($product['image_url']); ?>" class="img-fluid product-thumbnail" alt="<?= htmlspecialchars($product['product_name']);?>">
                             <h3 class="product-title"><?= htmlspecialchars($product['product_name']); ?></h3>
                             <strong class="product-price">$<?= htmlspecialchars($product['price']); ?></strong>
 

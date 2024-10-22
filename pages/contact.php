@@ -46,7 +46,12 @@
 
 				<ul class="custom-navbar-cta navbar-nav mb-2 mb-md-0 ms-5">
 					<li><a class="nav-link" href="login.php"><i class="fa-solid fa-right-to-bracket"></i></a></li>
-					<li><a class="nav-link" href="cart.php"><img src="../images/cart.svg"></a></li>
+					<li><a class="nav-link" href="pages/cart.php">
+							<img src="../images/cart.svg">
+							<span
+								class="cart-count"><?php echo isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0; ?></span>
+						</a>
+					</li>
 				</ul>
 			</div>
 		</div>
