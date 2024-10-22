@@ -1,3 +1,61 @@
+<?php
+$dsn = 'mysql:host=localhost;dbname=ecommerce_db';
+$username = 'root';
+$password = ''; 
+
+// Initialize the $results variable
+$results = []; // Initialize as an empty array
+
+try {
+    $pdo = new PDO($dsn, $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+   // Get filter criteria from the form
+$product_name = isset($_GET['product_name']) ? $_GET['product_name'] : '';
+$min_price = isset($_GET['min_price']) ? $_GET['min_price'] : 0;
+$max_price = isset($_GET['max_price']) ? $_GET['max_price'] : 9999; // Ensure max price has a valid default value
+$category_id = isset($_GET['category_id']) ? $_GET['category_id'] : null; // Get category_id from the form
+
+// Corrected SQL query to include category filtering
+$sql = "SELECT products.*, productimages.image_url, categories.category_name
+            FROM products 
+            JOIN productimages ON products.product_id = productimages.product_id
+            JOIN categories ON products.category_id = categories.category_id
+            WHERE products.product_name LIKE :product_name 
+            AND products.price BETWEEN :min_price AND :max_price
+            AND productimages.image_url NOT REGEXP '[0-9]'";
+
+// Add category filter if it exists
+if ($category_id) {
+    $sql .= " AND products.category_id = :category_id"; // Make sure your products table has a category_id column
+}
+
+$stmt = $pdo->prepare($sql);
+$params = [
+    'product_name' => "%$product_name%",
+    'min_price' => $min_price,
+    'max_price' => $max_price,
+];
+
+// Include the category filter if selected
+if ($category_id) {
+    $params['category_id'] = $category_id;
+}
+
+$stmt->execute($params);
+$results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+} catch (PDOException $e) {
+    // Handle the error (optional logging)
+    echo "Connection failed: " . $e->getMessage();
+}
+
+// Displaying Filtered Products
+?>
+
+
+
+
 <!doctype html>
 <html lang="en">
 
@@ -67,127 +125,88 @@
 	</div>
 	<!-- End Hero Section -->
 
+<!-- Filter Form -->
+<div class="container mt-4">
+    <form method="GET" class="row g-3">
+        <!-- Product Name -->
+        <div class="col-md-3">
+            <label for="product_name" class="form-label">Product Name</label>
+            <input type="text" class="form-control" id="product_name" name="product_name" value="<?= htmlspecialchars($product_name); ?>">
+        </div>
 
-	<div class="untree_co-section product-section before-footer-section">
-		<div class="container">
-			<div class="row">
+        <!-- Minimum Price -->
+        <div class="col-md-2">
+            <label for="min_price" class="form-label">Min Price</label>
+            <input type="number" class="form-control" id="min_price" name="min_price" min="0" step="0.01" value="<?= htmlspecialchars($min_price); ?>">
+        </div>
 
-				<!-- Start Column 1 -->
-				<div class="col-12 col-md-4 col-lg-3 mb-5">
-					<a class="product-item" href="productdetails.php">
-						<img src="../images/product-3.png" class="img-fluid product-thumbnail">
-						<h3 class="product-title">Nordic Chair</h3>
-						<strong class="product-price">$50.00</strong>
+        <!-- Maximum Price -->
+        <div class="col-md-2">
+            <label for="max_price" class="form-label">Max Price</label>
+            <input type="number" class="form-control" id="max_price" name="max_price" min="0" step="0.01" value="<?= htmlspecialchars($max_price); ?>">
+        </div>
 
-						<span class="icon-cross">
-							<img src="../images/cross.svg" class="img-fluid">
-						</span>
-					</a>
-				</div>
-				<!-- End Column 1 -->
+	<!-- Category Filter -->
+<div class="col-md-3">
+    <label for="category_id" class="form-label">Category</label>
+    <select class="form-select" id="category_id" name="category_id">
+        <option value="">All Categories</option>
+        <?php
+        // Fetch categories for the filter dropdown
+        try {
+            $category_stmt = $pdo->query("SELECT * FROM categories");
+            $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-				<!-- Start Column 2 -->
-				<div class="col-12 col-md-4 col-lg-3 mb-5">
-					<a class="product-item" href="#">
-						<img src="../images/product-1.png" class="img-fluid product-thumbnail">
-						<h3 class="product-title">Nordic Chair</h3>
-						<strong class="product-price">$50.00</strong>
+            // Initialize $category_id from GET or as an empty string if not set
+            $category_id = isset($_GET['category_id']) ? $_GET['category_id'] : '';
 
-						<span class="icon-cross">
-							<img src="../images/cross.svg" class="img-fluid">
-						</span>
-					</a>
-				</div>
-				<!-- End Column 2 -->
-
-				<!-- Start Column 3 -->
-				<div class="col-12 col-md-4 col-lg-3 mb-5">
-					<a class="product-item" href="#">
-						<img src="../images/product-2.png" class="img-fluid product-thumbnail">
-						<h3 class="product-title">Kruzo Aero Chair</h3>
-						<strong class="product-price">$78.00</strong>
-
-						<span class="icon-cross">
-							<img src="../images/cross.svg" class="img-fluid">
-						</span>
-					</a>
-				</div>
-				<!-- End Column 3 -->
-
-				<!-- Start Column 4 -->
-				<div class="col-12 col-md-4 col-lg-3 mb-5">
-					<a class="product-item" href="#">
-						<img src="../images/product-3.png" class="img-fluid product-thumbnail">
-						<h3 class="product-title">Ergonomic Chair</h3>
-						<strong class="product-price">$43.00</strong>
-
-						<span class="icon-cross">
-							<img src="../images/cross.svg" class="img-fluid">
-						</span>
-					</a>
-				</div>
-				<!-- End Column 4 -->
+            foreach ($categories as $category) {
+                // Check if the category_id from GET is the same as the current category
+                $selected = $category_id == $category['category_id'] ? 'selected' : '';
+                // Display the category_name
+                echo "<option value=\"" . htmlspecialchars($category['category_id']) . "\" $selected>" . htmlspecialchars($category['category_name']) . "</option>";
+            }
+        } catch (PDOException $e) {
+            echo "Error fetching categories: " . $e->getMessage();
+        }
+        ?>
+    </select>
+</div>
 
 
-				<!-- Start Column 1 -->
-				<div class="col-12 col-md-4 col-lg-3 mb-5">
-					<a class="product-item" href="#">
-						<img src="../images/product-3.png" class="img-fluid product-thumbnail">
-						<h3 class="product-title">Nordic Chair</h3>
-						<strong class="product-price">$50.00</strong>
 
-						<span class="icon-cross">
-							<img src="../images/cross.svg" class="img-fluid">
-						</span>
-					</a>
-				</div>
-				<!-- End Column 1 -->
+        <!-- Submit Button -->
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+</div>
 
-				<!-- Start Column 2 -->
-				<div class="col-12 col-md-4 col-lg-3 mb-5">
-					<a class="product-item" href="#">
-						<img src="../images/product-1.png" class="img-fluid product-thumbnail">
-						<h3 class="product-title">Nordic Chair</h3>
-						<strong class="product-price">$50.00</strong>
+<!-- Start Displaying Filtered Products -->
+<div class="untree_co-section product-section before-footer-section">
+    <div class="container">
+        <div class="row">
+            <?php if (!empty($results)): ?>
+                <?php foreach ($results as $product): ?>
+                    <div class="col-12 col-md-4 col-lg-3 mb-5">
+                        <a class="product-item" href="productdetails.php?id=<?= htmlspecialchars($product['product_id']); ?>">
+                            <!-- Adjusted the image path to include the full web path -->
+                            <img  width="261px" height="261px" src="http://localhost/Ecommerce_website.github.io-\<?= htmlspecialchars($product['image_url']); ?>" class="img-fluid product-thumbnail" alt="<?= htmlspecialchars($product['product_name']);?>">
+                            <h3 class="product-title"><?= htmlspecialchars($product['product_name']); ?></h3>
+                            <strong class="product-price">$<?= htmlspecialchars($product['price']); ?></strong>
 
-						<span class="icon-cross">
-							<img src="../images/cross.svg" class="img-fluid">
-						</span>
-					</a>
-				</div>
-				<!-- End Column 2 -->
-
-				<!-- Start Column 3 -->
-				<div class="col-12 col-md-4 col-lg-3 mb-5">
-					<a class="product-item" href="#">
-						<img src="../images/product-2.png" class="img-fluid product-thumbnail">
-						<h3 class="product-title">Kruzo Aero Chair</h3>
-						<strong class="product-price">$78.00</strong>
-
-						<span class="icon-cross">
-							<img src="../images/cross.svg" class="img-fluid">
-						</span>
-					</a>
-				</div>
-				<!-- End Column 3 -->
-
-				<!-- Start Column 4 -->
-				<div class="col-12 col-md-4 col-lg-3 mb-5">
-					<a class="product-item" href="#">
-						<img src="../images/product-3.png" class="img-fluid product-thumbnail">
-						<h3 class="product-title">Ergonomic Chair</h3>
-						<strong class="product-price">$43.00</strong>
-
-						<span class="icon-cross">
-							<img src="../images/cross.svg" class="img-fluid">
-						</span>
-					</a>
-				</div>
-				<!-- End Column 4 -->
-
-			</div>
-		</div>
-	</div>
+                            <span class="icon-cross">
+                                <img src="../images/cross.svg" class="img-fluid">
+                            </span>
+                        </a>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p class="text-center">No products found matching your criteria.</p>
+            <?php endif; ?>
+        </div>
+    </div> 
+</div>
 
 
 	<!-- Start Footer Section -->

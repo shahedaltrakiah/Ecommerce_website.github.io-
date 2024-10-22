@@ -18,35 +18,61 @@ function validateForm() {
             title: 'Message sent!',
             text: 'We will get back to you soon.',
             confirmButtonColor: '#3B5D50'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById("fname").value = '';
+                document.getElementById("lname").value = '';
+                document.getElementById("email").value = '';
+                document.getElementById("message").value = '';
+            }
         });
         return true;
     }
 }
 
-function validateSubscribeForm() {
-    var name = document.getElementById("name").value.trim();
-    var email = document.getElementById("email").value.trim();
+document.getElementById("subscribeForm").addEventListener("submit", function (event) {
+    event.preventDefault(); // Prevent form submission
+
+    var name = document.getElementById("name").value;
+    var email = document.getElementById("email").value;
 
     if (name === "" || email === "") {
+        // Show an error alert if fields are empty
         Swal.fire({
+            title: 'Error!',
+            text: 'Fields cannot be empty.',
             icon: 'error',
-            title: 'Oops...',
-            text: 'All fields are required!',
+            confirmButtonText: 'OK',
             confirmButtonColor: '#3B5D50'
-        });
-        return false; // Prevent form submission
-    } else {
-        Swal.fire({
-            icon: 'success',
-            title: 'Message sent!',
-            text: 'We will get back to you soon.',
-            confirmButtonColor: '#3B5D50'
-        });
-        return true; // Allow form submission
-    }
-}
 
-// Set the date we're counting down to (replace with your desired date)
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Clear the fields if "OK" is clicked
+                document.getElementById("name").value = '';
+                document.getElementById("email").value = '';
+            }
+        });
+    } else {
+        // Show success message
+        Swal.fire({
+            title: 'Success!',
+            text: 'You have subscribed successfully!',
+            icon: 'success',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#3B5D50'
+
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Clear the fields after the success message
+                document.getElementById("name").value = '';
+                document.getElementById("email").value = '';
+            }
+        });
+    }
+});
+
+
+// Set the date we're counting down to
 const countdownDate = new Date("October 31, 2024 23:59:59").getTime();
 
 // Update the countdown every second
@@ -76,20 +102,4 @@ const countdownFunction = setInterval(() => {
     }
 }, 1000);
 
-document.getElementById("toggle-button").addEventListener("click", function() {
-    const extraCards = document.querySelectorAll(".extra-card");
-    const button = this;
 
-    // Check if the extra cards are currently displayed or hidden
-    if (extraCards[0].style.display === "none" || extraCards[0].style.display === "") {
-        extraCards.forEach(card => {
-            card.style.display = "block"; // Show the extra cards
-        });
-        button.textContent = "Show Less"; // Change button text
-    } else {
-        extraCards.forEach(card => {
-            card.style.display = "none"; // Hide the extra cards
-        });
-        button.textContent = "Show More"; // Change button text
-    }
-});

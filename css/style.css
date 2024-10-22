@@ -778,6 +778,7 @@ a.more {
   background: #ffffff;
 }
 
+
 .footer-section .relative {
   position: relative;
 }
@@ -1110,9 +1111,7 @@ a {
 .category-card {
   padding: 20px;
   border: none;
-  /* Removed the border */
   background-color: transparent;
-  /* Removed the background color */
   transition: transform 0.3s ease-in-out;
 }
 
@@ -1120,19 +1119,12 @@ a {
   transform: scale(1.05);
 }
 
-.carousel-control-prev,
-.carousel-control-next {
-  background-color: transparent;
-  border: none;
-}
-
-.carousel-control-prev:hover,
-.carousel-control-next:hover {
-  background-color: #ddd;
-}
-
 
 /************* our offer *****************/
+
+.our_offer {
+  background-color: #fff;
+}
 
 .our_offer .date_countdown {
   margin: 37px 0 55px;
@@ -1186,7 +1178,7 @@ a {
   height: 60px;
   padding-left: 25px;
   border: 0px solid transparent;
-  background-color: #fff;
+  border: 1px solid #F9BF29;
 }
 
 .our_offer .input-group input::placeholder {
@@ -1204,6 +1196,12 @@ a {
   font-weight: 500;
   text-transform: uppercase;
 }
+
+#basic-addon2:hover {
+  background-color: #f9be2981;
+  color: #000;
+}
+
 
 @media (max-width: 991px) {
   .our_offer .input-group .input-group-text {
@@ -1238,4 +1236,8 @@ a {
   color: #666;
   text-align: left;
 
+}
+.apply-btn
+{
+  color: red;
 }

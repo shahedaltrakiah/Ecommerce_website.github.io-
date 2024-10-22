@@ -1,19 +1,6 @@
 <?php
 session_start(); // Start the session to access cart data
-
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "ecommerce_db"; // Your database name
-
-try {
-    $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-    echo "Connection failed: " . $e->getMessage();
-    exit();
-}
-
+include "../includes/db.php";
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get form data
@@ -25,6 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['c_email_address'];
     $phone = $_POST['c_phone'];
     $orderNotes = $_POST['c_order_notes'];
+	$couponCode = $_POST['coupon_code'] ?? '';
 
     // Calculate total amount from cart items
     $totalAmount = 0;
@@ -33,9 +21,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $totalAmount += $item['price'] * $item['quantity']; // Assuming each item has 'price' and 'quantity'
         }
     }
+	$discount = 0; // Initialize discount amount
+    if (!empty($couponCode)) {
+        $stmt = $conn->prepare("SELECT * FROM coupons WHERE code = :code");
+        $stmt->execute(['code' => $couponCode]);
+        $coupon = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($coupon && $coupon['usage_limit'] > 0) {
+            // Apply discount logic here, for example:
+            $discount = $coupon['discount_amount']; // Assume there's a discount_amount column
+            $totalAmount -= $discount; // Subtract discount from total amount
+
+            // Decrement usage limit
+            $stmt = $conn->prepare("UPDATE coupons SET usage_limit = usage_limit - 1 WHERE code = :code");
+            $stmt->execute(['code' => $couponCode]);
+        }
+    }
 
     // Insert order into the database
-    $sql = "INSERT INTO `Order` (customer_id, total_amount, status) VALUES (:customer_id, :total_amount, 'pending')";
+    $sql = "INSERT INTO `orders` (customer_id, total_amount, status) VALUES (:customer_id, :total_amount, 'pending')";
     $stmt = $conn->prepare($sql);
     
     // Assuming you have a way to get customer_id
@@ -49,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Insert order items into order_items table
         foreach ($_SESSION['cart'] as $item) {
-            $sql = "INSERT INTO Order_Item (order_id, product_id, quantity, price) VALUES (:order_id, :product_id, :quantity, :price)";
+            $sql = "INSERT INTO orderitems (order_id, product_id, quantity, price) VALUES (:order_id, :product_id, :quantity, :price)";
             $stmt = $conn->prepare($sql);
             $stmt->bindParam(':order_id', $orderId);
             $stmt->bindParam(':product_id', $item['product_id']);
@@ -59,7 +63,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // Clear the cart after order is placed
-        unset($_SESSION['cart']);
+		unset($_SESSION['cart']);
+        unset($_SESSION['subtotal']);
+        unset($_SESSION['discounts']);
+        unset($_SESSION['applied_coupons']);
+
 
         // Redirect to thank you page
         header("Location: thankyou.html");
@@ -76,8 +84,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<meta name="author" content="Untree.co">
-	<link rel="shortcut icon" href="favicon.png">
-
+	<link rel="shortcut icon" href="../images/logo">
 	<meta name="description" content="" />
 	<meta name="keywords" content="bootstrap, bootstrap4" />
 
@@ -86,6 +93,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 	<link href="../css/tiny-slider.css" rel="stylesheet">
 	<link href="../css/style.css" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 	<title>Furni Free Bootstrap 5 Template for Furniture and Interior Design Websites by Untree.co </title>
 </head>
 
@@ -95,7 +104,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 	<nav class="custom-navbar navbar navbar navbar-expand-md navbar-dark bg-dark" arial-label="Furni navigation bar">
 
 		<div class="container">
-			<a class="navbar-brand" href="../index.php">Furni<span>.</span></a>
+			<a class="navbar-brand" href="../index.php"><img class="logo-img" src="../images/Logo"
+					style="max-width:150px;"></a>
 
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsFurni"
 				aria-controls="navbarsFurni" aria-expanded="false" aria-label="Toggle navigation">
@@ -109,7 +119,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 					</li>
 					<li><a class="nav-link" href="shop.php">Shop</a></li>
 					<li><a class="nav-link" href="about.html">About us</a></li>
-					<li><a class="nav-link" href="contact.html">Contact us</a></li>
+					<li><a class="nav-link" href="#">Contact us</a></li>
 				</ul>
 
 				<ul class="custom-navbar-cta navbar-nav mb-2 mb-md-0 ms-5">
@@ -247,7 +257,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 			<!-- </form> -->
 	<!-- Start Footer Section -->
 	<footer class="footer-section">
-		<div class="container relative">
+		<div class="container relative" style="margin-bottom: -50px;">
 
 			<div class="sofa-img">
 				<img src="../images/sofa.png" alt="Image" class="img-fluid">
@@ -256,33 +266,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 			<div class="row">
 				<div class="col-lg-8">
 					<div class="subscription-form">
-						<h3 class="d-flex align-items-center"><span class="me-1"><img src="../images/envelope-outline.svg"
-									alt="Image" class="img-fluid"></span><span>Subscribe to Newsletter</span></h3>
-
-						<form action="#" class="row g-3">
-							<div class="col-auto">
-								<input type="text" class="form-control" placeholder="Enter your name">
-							</div>
-							<div class="col-auto">
-								<input type="email" class="form-control" placeholder="Enter your email">
-							</div>
-							<div class="col-auto">
-								<button class="btn btn-primary">
-									<span class="fa fa-paper-plane"></span>
-								</button>
-							</div>
-						</form>
-
 					</div>
 				</div>
 			</div>
 
 			<div class="row g-5 mb-5">
 				<div class="col-lg-4">
-					<div class="mb-4 footer-logo-wrap"><a href="#" class="footer-logo">Furni<span>.</span></a></div>
-					<p class="mb-4">Donec facilisis quam ut purus rutrum lobortis. Donec vitae odio quis nisl dapibus
-						malesuada. Nullam ac aliquet velit. Aliquam vulputate velit imperdiet dolor tempor tristique.
-						Pellentesque habitant</p>
+					<div class="mb-4 footer-logo-wrap"><a href="#" class="footer-logo">Nest & Buy </a></div>
+					<p class="mb-4">At Nest & Buy, we bring you stylish, high-quality furniture to make your home cozy
+						and beautiful. With a focus on craftsmanship and design, we’re here to help you create spaces
+						you love.
+					</p>
 
 					<ul class="list-unstyled custom-social">
 						<li><a href="#"><span class="fa fa-brands fa-facebook-f"></span></a></li>
@@ -296,35 +290,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 					<div class="row links-wrap">
 						<div class="col-6 col-sm-6 col-md-3">
 							<ul class="list-unstyled">
-								<li><a href="#">About us</a></li>
-								<li><a href="#">Services</a></li>
-								<li><a href="#">Blog</a></li>
+								<li><a href="about.html">About us</a></li>
+								<li><a href="shop.php">Shop</a></li>
 								<li><a href="#">Contact us</a></li>
 							</ul>
 						</div>
 
 						<div class="col-6 col-sm-6 col-md-3">
 							<ul class="list-unstyled">
-								<li><a href="#">Support</a></li>
-								<li><a href="#">Knowledge base</a></li>
+								<li><a href="#">Testimonials</a></li>
+								<li><a href="about.html#ourTeam">Our team</a></li>
 								<li><a href="#">Live chat</a></li>
 							</ul>
 						</div>
 
 						<div class="col-6 col-sm-6 col-md-3">
 							<ul class="list-unstyled">
-								<li><a href="#">Jobs</a></li>
-								<li><a href="#">Our team</a></li>
-								<li><a href="#">Leadership</a></li>
-								<li><a href="#">Privacy Policy</a></li>
+								<li><a href="#">Category</a></li>
+								<li><a href="#">Product</a></li>
+								<li><a href="#">Best seller</a></li>
 							</ul>
 						</div>
 
 						<div class="col-6 col-sm-6 col-md-3">
 							<ul class="list-unstyled">
-								<li><a href="#">Nordic Chair</a></li>
-								<li><a href="#">Kruzo Aero</a></li>
-								<li><a href="#">Ergonomic Chair</a></li>
+								<img src="../images/Logo (2).png" style="max-width: 130px;">
 							</ul>
 						</div>
 					</div>
@@ -337,9 +327,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 					<div class="col-lg-6">
 						<p class="mb-2 text-center text-lg-start">Copyright &copy;
 							<script>document.write(new Date().getFullYear());</script>. All Rights Reserved. &mdash;
-							Designed with love by <a href="https://untree.co">Untree.co</a> Distributed By <a
-								hreff="https://themewagon.com">ThemeWagon</a>
-							<!-- License information: https://untree.co/license/ -->
+							Designed with love by Nest & Buy
 						</p>
 					</div>
 
@@ -349,10 +337,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 							<li><a href="#">Privacy Policy</a></li>
 						</ul>
 					</div>
-
 				</div>
 			</div>
-
 		</div>
 	</footer>
 	<!-- End Footer Section -->
@@ -366,33 +352,75 @@ function validateForm() {
     const postal = document.getElementById('c_postal_zip').value;
     const namePattern = /^[A-Za-z]{3,}$/; 
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
-    const phonePattern = /^\d{10}$/; 
+    const phonePattern = /^07\d{8}$/;
     const postalPattern = /^\d{5}(-\d{4})?$/; 
-
+    if (!firstName || !lastName || !email || !phone || !postal) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Required Fields',
+            text: 'All fields are required.',
+            confirmButtonColor: '#3B5D50'
+        });
+        return false;
+    }
     if (!namePattern.test(firstName)) {
-        alert("First name must contain at least 3 letters.");
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid Input',
+            text: 'First name must contain at least 3 letters.'
+			,
+			confirmButtonColor: '#3B5D50'
+
+        });
         return false;
     }
     if (!namePattern.test(lastName)) {
-        alert("Last name must contain at least 3 letters.");
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid Input',
+            text: 'Last name must contain at least 3 letters.',
+			confirmButtonColor: '#3B5D50'
+
+        });
         return false;
     }
     if (!emailPattern.test(email)) {
-        alert("Please enter a valid email address.");
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid Input',
+            text: 'Please enter a valid email address.'
+			,
+			confirmButtonColor: '#3B5D50'
+
+        });
         return false;
     }
-	if (!postalPattern.test(postal)) {
-        alert("Please enter a valid postal/ZIP code.");
+    if (!postalPattern.test(postal)) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid Input',
+            text: 'Please enter a valid postal/ZIP code.'
+			,
+			confirmButtonColor: '#3B5D50'
+
+        });
         return false;
     }
     if (!phonePattern.test(phone)) {
-        alert("Phone number must be exactly 10 digits.");
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid Input',
+            text: 'Phone number must be exactly 10 digits and start with "07".'
+			,
+			confirmButtonColor: '#3B5D50'
+
+        });
         return false;
     }
 
-
     return true; 
 }
+
 </script>
 	<script src="../js/bootstrap.bundle.min.js"></script>
 	<script src="../js/tiny-slider.js"></script>
