@@ -1,6 +1,8 @@
 <?php
 session_start(); // Start the session to access cart data
 include "../includes/db.php";
+$database = new Database();
+$conn = $database->getConnection();
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get form data

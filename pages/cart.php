@@ -1,119 +1,125 @@
 <?php
 session_start();
 include "../includes/db.php";
+
 $subtotal = 0; // Initialize subtotal
-$discountAmount = 0;
 $database = new Database();
 $conn = $database->getConnection();
+
 // Initialize the cart if it doesn't exist
 if (!isset($_SESSION['cart'])) {
-  $_SESSION['cart'] = [];
+    $_SESSION['cart'] = [];
 }
 
 // Add products to cart
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
-  $productId = $_POST['product_id'];
-  $stmt = $conn->prepare("SELECT * FROM products WHERE product_id = :product_id");
-  $stmt->execute(['product_id' => $productId]);
-  $product = $stmt->fetch(PDO::FETCH_ASSOC);
+    $productId = $_POST['product_id'];
+    $stmt = $conn->prepare("SELECT * FROM products WHERE product_id = :product_id");
+    $stmt->execute(['product_id' => $productId]);
+    $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
-  if ($product) {
-    $_SESSION['cart'][$productId] = [
-      'name' => $product['product_name'],
-      'price' => $product['price'],
-      'quantity' => ($_SESSION['cart'][$productId]['quantity'] ?? 0) + 1,
-      'image' => $product['image'],
-      'description' => $product['description'],
-    ];
-  }
+    if ($product) {
+        $_SESSION['cart'][$productId] = [
+            'name' => $product['product_name'],
+            'price' => $product['price'],
+            'quantity' => ($_SESSION['cart'][$productId]['quantity'] ?? 0) + 1,
+            'image' => $product['image'],
+            'description' => $product['description'],
+        ];
+    }
 }
 
 // Calculate subtotal
 foreach ($_SESSION['cart'] as $product) {
-  $subtotal += $product['price'] * $product['quantity'];
+    $subtotal += $product['price'] * $product['quantity'];
 }
 
 // Set subtotal in session to ensure it's updated
 $_SESSION['subtotal'] = $subtotal;
 
-// Apply coupon logic
-// Apply coupon logic
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-  if (isset($_POST['apply_coupon'])) {
-      $couponCode = $_POST['coupon_code'];
-
-      // Fetch the coupon from the database
-      $stmt = $conn->prepare("SELECT discount, expiration_date FROM coupons WHERE code = :code");
-      $stmt->execute(['code' => $couponCode]);
-      $coupon = $stmt->fetch(PDO::FETCH_ASSOC);
-
-      // Check if coupon exists and is not expired
-      if ($coupon) {
-          $currentDate = date('Y-m-d H:i:s');
-          if ($currentDate <= $coupon['expiration_date']) {
-              // Initialize the applied_coupons array in the session if it doesn't exist
-              if (!isset($_SESSION['applied_coupons'])) {
-                  $_SESSION['applied_coupons'] = [];
-              }
-
-              // Add coupon to the session array if not already applied
-              if (!in_array($couponCode, $_SESSION['applied_coupons'])) {
-                  $_SESSION['applied_coupons'][] = $couponCode;
-
-                  // Calculate the discount based on the coupon
-                  $_SESSION['discount'] = ($_SESSION['subtotal'] * $coupon['discount']) / 100;
-
-                  // Initialize the session discounts array if not set
-                  if (!isset($_SESSION['discounts'])) {
-                      $_SESSION['discount'] = [];
-                  }
-
-                  // Store the discount for the specific coupon
-                  $_SESSION['discounts'][$couponCode] = $_SESSION['discount'];
-
-                  // Update subtotal after applying the discount
-                  $subtotal -= $_SESSION['discount'][$couponCode];
-                  $_SESSION['subtotal'] = $subtotal; // Store the new subtotal
-              } else {
-                  $_SESSION['error_message'] = "Coupon has already been applied.";
-              }
-          } else {
-              $_SESSION['error_message'] = "Coupon has expired.";
-          }
-      } else {
-          $_SESSION['error_message'] = "Invalid coupon code.";
-      }
-  } elseif (isset($_POST['remove_coupon'])) {
-      $couponCode = $_POST['coupon_code'];
-
-      // Check if the coupon is applied
-      if (in_array($couponCode, $_SESSION['applied_coupons'])) {
-          // Remove the coupon from the session
-          $key = array_search($couponCode, $_SESSION['applied_coupons']);
-          unset($_SESSION['applied_coupons'][$key]);
-
-          // Calculate and remove the discount from the subtotal
-          $discountAmount = $_SESSION['discount'][$couponCode];
-          $subtotal += $discountAmount; // Revert the subtotal
-
-          // Remove the discount from the session
-          unset($_SESSION['discount'][$couponCode]);
-          $_SESSION['subtotal'] = $subtotal; // Update the subtotal in the session
-      } else {
-          $_SESSION['error_message'] = "Coupon not found in applied coupons.";
-      }
-  }
+// Initialize discount variables
+$discountAmount = 0;
+if (!isset($_SESSION['discount'])) {
+    $_SESSION['discount'] = 0; // Initialize if it doesn't exist
 }
 
+// Apply coupon logic
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['apply_coupon'])) {
+        $couponCode = $_POST['coupon_code'];
 
+        // Fetch the coupon from the database
+        $stmt = $conn->prepare("SELECT discount, expiration_date FROM coupons WHERE code = :code");
+        $stmt->execute(['code' => $couponCode]);
+        $coupon = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Check if coupon exists and is not expired
+        if ($coupon) {
+            $currentDate = date('Y-m-d H:i:s');
+            if ($currentDate <= $coupon['expiration_date']) {
+                // Initialize the applied_coupons array in the session if it doesn't exist
+                if (!isset($_SESSION['applied_coupons'])) {
+                    $_SESSION['applied_coupons'] = [];
+                }
+
+                // Add coupon to the session array if not already applied
+                if (!in_array($couponCode, $_SESSION['applied_coupons'])) {
+                    $_SESSION['applied_coupons'][] = $couponCode;
+
+                    // Calculate the discount based on the coupon
+                    $discountAmount = ($_SESSION['subtotal'] * $coupon['discount']) / 100;
+                    $_SESSION['discount'] += $discountAmount; // Aggregate discounts
+
+                    // Update subtotal after applying the discount
+                    $_SESSION['subtotal'] -= $discountAmount; // Store the new subtotal
+                } else {
+                    $_SESSION['error_message'] = "Coupon has already been applied.";
+                }
+            } else {
+                $_SESSION['error_message'] = "Coupon has expired.";
+            }
+        } else {
+            $_SESSION['error_message'] = "Invalid coupon code.";
+        }
+    } elseif (isset($_POST['remove_coupon'])) {
+        $couponCode = $_POST['coupon_code'];
+
+        // Check if the coupon is applied
+        if (in_array($couponCode, $_SESSION['applied_coupons'])) {
+            // Remove the coupon from the session
+            $key = array_search($couponCode, $_SESSION['applied_coupons']);
+            unset($_SESSION['applied_coupons'][$key]);
+
+            // Reset discount amount for the removed coupon
+            $stmt = $conn->prepare("SELECT discount FROM coupons WHERE code = :code");
+            $stmt->execute(['code' => $couponCode]);
+            $coupon = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($coupon) {
+                // Recalculate the discount based on the coupon
+                $removedDiscountAmount = ($_SESSION['subtotal'] * $coupon['discount']) / 100;
+                $_SESSION['discount'] -= $removedDiscountAmount; // Deduct the removed coupon discount
+
+                // Revert the subtotal
+                $_SESSION['subtotal'] += $removedDiscountAmount; // Restore subtotal
+            }
+
+            if (empty($_SESSION['applied_coupons'])) {
+                // Reset discount if no coupons are applied
+                $_SESSION['discount'] = 0;
+            }
+        } else {
+            $_SESSION['error_message'] = "Coupon not found in applied coupons.";
+        }
+    }
+}
 
 // Redirect to cart page only if not already there
 if (!isset($_SESSION['redirected'])) {
-  $_SESSION['redirected'] = true; // Prevents redirect loop
-  header("Location: cart.php");
-  exit();
+    $_SESSION['redirected'] = true; // Prevents redirect loop
+    header("Location: cart.php");
+    exit();
 } else {
-  unset($_SESSION['redirected']); // Reset for the next request
+    unset($_SESSION['redirected']); // Reset for the next request
 }
 ?>
 
@@ -262,53 +268,60 @@ if (!isset($_SESSION['redirected'])) {
         <?php endif; ?>
                     </div>
                     <div class="row mb-5">
-                      <div class="col-md-6">
-                        <span class="text-black">Subtotal</span>
-                      </div>
-                      <div class="col-md-6 text-right">
-                        <strong class="text-black">$<?php echo number_format(isset($_SESSION['subtotal']) ? $_SESSION['subtotal'] : 0, 2); ?></strong>
-                      </div>
-                    </div>
+    <div class="col-md-6">
+        <span class="text-black">Subtotal</span>
+    </div>
+    <div class="col-md-6 text-right">
+        <strong class="text-black">
+            $<?php echo number_format(isset($_SESSION['subtotal']) ? $_SESSION['subtotal'] : 0, 2); ?>
+        </strong>
+    </div>
+</div>
 
-                    <?php if (isset($_SESSION['discount'])): ?>
-                      <div class="row mb-5">
-                        <div class="col-md-6">
-                          <span class="text-black">Discount</span>
-                        </div>
-                        <div class="col-md-6 text-right">
-                          <strong class="text-black">-$<?php echo number_format($_SESSION['discount'], 2); ?></strong>
-                        </div>
-                      </div>
-                    <?php endif; ?>
+<?php
+// Initialize discountAmount from session if it exists
+$discountAmount = isset($_SESSION['discount']) ? $_SESSION['discount'] : 0;
 
-                    <div class="row mb-5">
-                      <div class="col-md-6">
-                        <span class="text-black">Total</span>
-                      </div>
-                      <div class="col-md-6 text-right">
-                        <strong class="text-black">
-                          $<?php
-                          // Calculate the total as subtotal minus discount
-                          $total = isset($_SESSION['subtotal']) ? $_SESSION['subtotal'] : 0;
-                          $discount = isset($_SESSION['discount']) ? $_SESSION['discount'] : 0;
-                          echo number_format($total - $discount, 2);
-                          ?>
-                        </strong>
-                      </div>
-                    </div>
-
-                    <div class="row mb-5">
-                      <div class="col-md-12">
-                        <button class="btn btn-black btn-lg btn-block" type="button" onclick="location.href='checkout.php'">Proceed
-                          to Checkout</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+// Check if discount is set
+if ($discountAmount > 0): ?>
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <span class="text-black">Discount</span>
         </div>
+        <div class="col-md-6 text-right">
+            <strong class="text-black">-$<?php echo number_format($discountAmount, 2); ?></strong>
+        </div>
+    </div>
+<?php endif; ?>
+
+<div class="row mb-5">
+    <div class="col-md-6">
+        <span class="text-black">Total</span>
+    </div>
+    <div class="col-md-6 text-right">
+        <strong class="text-black">
+            $<?php
+            // Calculate the total as subtotal minus discount
+            $total = isset($_SESSION['subtotal']) ? $_SESSION['subtotal'] : 0;
+            // Using $discountAmount which was set above
+            echo number_format($total - $discountAmount, 2);
+            ?>
+        </strong>
+    </div>
+</div>
+<div class="row mb-5">
+                        <div class="col-md-12">
+                          <a href="checkout.php" class="btn btn-black btn-lg btn-block">Proceed to Checkout</a>
+                        </div>
+                      </div>
+                    </div> <!-- End of Cart Totals -->
+
+                  </div> <!-- End of col-md-7 -->
+                </div> <!-- End of row justify-content-end -->
+              </div> <!-- End of col-md-6 pl-5 -->
+            </div> <!-- End of row -->
+          </div> <!-- End of container -->
+        </div> <!-- End of untree_co-section before-footer-section -->
   <!-- Start Footer Section -->
   <footer class="footer-section">
         <div class="container relative" style="margin-top: 50px;">
