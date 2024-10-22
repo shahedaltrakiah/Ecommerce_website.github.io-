@@ -1,60 +1,48 @@
 <?php
 session_start();
-include_once("../core/request.php");
-include_once("../core/validations.php");
-include_once("../core/sessions.php");
-include_once('../data/config.php');
+include_once("../includes/request.php");
+include_once("../includes/validations.php");
+include_once("../includes/sessions.php");
+include_once('../includes/db.php');
 
-$errors = [];
-
-if (postMethod()) {
-
-    foreach ($_POST as $key => $value) {
-        $$key = receivedInput($value);
-    }
+if ($_SERVER["REQUEST_METHOD"] == "POST") {  
+  
+    $email = $_POST['email'];
+    $password = $_POST['password'];
 
 
-    if (requiredInput($email)) {
-        $errors[] = "Email is required";
-    } elseif (emailInput($email)) {
-        $errors[] = "Please enter a valid email";
-    }
+    try {
+        $query ="SELECT password, username, image_url, customer_ID FROM Customers WHERE email = :email";
+        $stmt = $conn->prepare($query);
+        $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':image_url', $image_url); 
+        $stmt->execute();
 
-    if (requiredInput($password)) {
-        $errors[] = "Password is required";
-    }
-
-    if (empty($errors)) {
-        try {
-            $query = "SELECT password, username FROM Customers WHERE email = :email";
-            $stmt = $conn->prepare($query);
-            $stmt->bindParam(":email", $email);
-            $stmt->execute();
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+     
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         
-            if ($user && password_verify($password, $user['password'])) {
-                $userData = [
-                    'name' => $user['username'],
-                    'email' => $email,
-                ];
-                sessionStore('user', $userData);
-                removeSession("signInErrors");
-                removeSession("signUpErrors");
-                // header("Location: ../profile.php");
-                
-                exit();
-            } else {
-                $errors[] = "Invalid email or password";
-            }
-        } catch (Exception $e) {
-            $errors[] = $e->getMessage();
+        if ($user && password_verify($password, $user['password'])) {
+           
+            $_SESSION['user'] = [
+                'name' => $user['username'],
+                'email' => $email,
+                'image_url' => $user['image_url'],
+                'customer_ID' => $user['customer_ID'],
+            ];
+           
+            header("Location: ../index.php");
+            exit();
+        } else {
+        
+            
+            echo '<script>window.location.href = "../pages/login.php";</script>';
+            exit();
         }
-    }
-
-    if (!empty($errors)) {
-        sessionStore("signInErrors", $errors);
-        // header("Location: ../index.php");
+    } catch (Exception $e) {
+     
+     
+        echo '<script>window.location.href = "../pages/login.php";</script>';
         exit();
     }
 } else {

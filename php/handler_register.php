@@ -4,6 +4,8 @@ include("../includes/request.php");
 include("../includes/validations.php");
 include("../includes/sessions.php");
 include('../includes/db.php'); 
+$database=new Database();
+$conn=$database->getConnection();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
  
@@ -39,8 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
            header('Location:../pages/login.php' );
             
         exit();
-        }
-         else {
+        } else {
             echo "<script>
                 Swal.fire({
                     icon: 'error',
