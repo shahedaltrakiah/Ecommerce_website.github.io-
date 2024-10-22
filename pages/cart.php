@@ -2,7 +2,7 @@
 session_start();
 include "../includes/db.php";
 $subtotal = 0; // Initialize subtotal
-$discountAmount = 0; 
+$totalDiscount = 0; 
 
 // Initialize the cart if it doesn't exist
 if (!isset($_SESSION['cart'])) {
@@ -10,7 +10,7 @@ if (!isset($_SESSION['cart'])) {
 }
 
 // Add products to cart
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) { 
     $productId = $_POST['product_id'];
     $stmt = $conn->prepare("SELECT * FROM products WHERE product_id = :product_id");
     $stmt->execute(['product_id' => $productId]);
@@ -41,58 +41,41 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       $couponCode = $_POST['coupon_code'];
 
       // Fetch the coupon from the database
-      $stmt = $conn->prepare("SELECT discount, expiration_date FROM coupons WHERE code = :code");
+      $stmt = $conn->prepare("SELECT discount, expiration_date, usage_limit FROM coupons WHERE code = :code");
       $stmt->execute(['code' => $couponCode]);
       $coupon = $stmt->fetch(PDO::FETCH_ASSOC);
 
-      // Check if coupon exists and is not expired
+      // Check if coupon exists, is not expired, and usage limit is valid
       if ($coupon) {
           $currentDate = date('Y-m-d H:i:s');
-          if ($currentDate <= $coupon['expiry_date']) {
-              // Initialize the applied_coupons array in the session if it doesn't exist
+          if ($currentDate <= $coupon['expiration_date'] && $coupon['usage_limit'] > 0) {
+              // Proceed with applying the coupon
               if (!isset($_SESSION['applied_coupons'])) {
                   $_SESSION['applied_coupons'] = [];
               }
 
-              // Add coupon to the session array if not already applied
               if (!in_array($couponCode, $_SESSION['applied_coupons'])) {
                   $_SESSION['applied_coupons'][] = $couponCode;
-                  $_SESSION['discounts'][$couponCode] = ($subtotal * $coupon['discount_percentage']) / 100;
+                  $_SESSION['discounts'][$couponCode] = ($subtotal * $coupon['discount']) / 100;
 
                   // Update subtotal after applying discount
                   $subtotal -= $_SESSION['discounts'][$couponCode];
-                  $_SESSION['subtotal'] = $subtotal; // Store the new subtotal
+                  $_SESSION['subtotal'] = $subtotal;
+
+                  // Decrement the usage limit
+                  $stmt = $conn->prepare("UPDATE coupons SET usage_limit = usage_limit - 1 WHERE code = :code");
+                  $stmt->execute(['code' => $couponCode]);
               } else {
                   $_SESSION['error_message'] = "Coupon has already been applied.";
               }
           } else {
-              $_SESSION['error_message'] = "Coupon has expired.";
+              $_SESSION['error_message'] = "Coupon is either invalid or has reached its usage limit.";
           }
       } else {
           $_SESSION['error_message'] = "Invalid coupon code.";
       }
-  } elseif (isset($_POST['remove_coupon'])) {
-      $couponCode = $_POST['coupon_code'];
-
-      // Check if the coupon is applied
-      if (in_array($couponCode, $_SESSION['applied_coupons'])) {
-          // Remove the coupon from the session
-          $key = array_search($couponCode, $_SESSION['applied_coupons']);
-          unset($_SESSION['applied_coupons'][$key]);
-
-          // Calculate and remove the discount from the subtotal
-          $discountAmount = $_SESSION['discounts'][$couponCode];
-          $subtotal += $discountAmount; // Revert the subtotal
-
-          // Remove the discount from the session
-          unset($_SESSION['discounts'][$couponCode]);
-          $_SESSION['subtotal'] = $subtotal; // Update the subtotal in the session
-      } else {
-          $_SESSION['error_message'] = "Coupon not found in applied coupons.";
-      }
   }
 }
-
 
 // Redirect to cart page only if not already there
 if (!isset($_SESSION['redirected'])) {
@@ -112,7 +95,8 @@ if (!isset($_SESSION['redirected'])) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="author" content="Untree.co">
-	<link rel="shortcut icon" href="../images/logo">
+  <link rel="shortcut icon" href="favicon.png">
+
   <meta name="description" content="" />
   <meta name="keywords" content="bootstrap, bootstrap4" />
 
@@ -121,7 +105,6 @@ if (!isset($_SESSION['redirected'])) {
 		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 		<link href="../css/tiny-slider.css" rel="stylesheet">
         <link href="../css/style.css" rel="stylesheet">
-        
 
 		<title>Furni Free Bootstrap 5 Template for Furniture and Interior Design Websites by Untree.co </title>
 	</head>
@@ -129,26 +112,25 @@ if (!isset($_SESSION['redirected'])) {
 	<body>
 
 		<!-- Start Header/Navigation -->
-    <nav class="custom-navbar navbar navbar navbar-expand-md navbar-dark bg-dark" arial-label="Furni navigation bar">
+		<nav class="custom-navbar navbar navbar navbar-expand-md navbar-dark bg-dark" arial-label="Furni navigation bar">
 
-<div class="container">
-  <a class="navbar-brand" href="../index.php"><img class="logo-img" src="../images/Logo"
-      style="max-width:150px;"></a>
+			<div class="container">
+				<a class="navbar-brand" href="index.html">Furni<span>.</span></a>
 
-  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsFurni"
-    aria-controls="navbarsFurni" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
+				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsFurni" aria-controls="navbarsFurni" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
 
-  <div class="collapse navbar-collapse" id="navbarsFurni">
-    <ul class="custom-navbar-nav navbar-nav ms-auto mb-2 mb-md-0">
-      <li class="nav-item ">
-        <a class="nav-link" href="../index.php">Home</a>
-      </li>
-      <li><a class="nav-link" href="shop.php">Shop</a></li>
-      <li><a class="nav-link" href="about.html">About us</a></li>
-      <li><a class="nav-link" href="contact.php">Contact us</a></li>
-    </ul>
+				<div class="collapse navbar-collapse" id="navbarsFurni">
+					<ul class="custom-navbar-nav navbar-nav ms-auto mb-2 mb-md-0">
+						<li class="nav-item ">
+							<a class="nav-link" href="../index.php ">Home</a>
+						</li>
+						<li><a class="nav-link" href="../pages/shop.php">Shop</a></li>
+						<li><a class="nav-link" href="about.html">About us</a></li>
+						<li><a class="nav-link" href="services.html">Services</a></li>
+						<li><a class="nav-link" href="../pages/contact.php">Contact us</a></li>
+					</ul>
 
 					<ul class="custom-navbar-cta navbar-nav mb-2 mb-md-0 ms-5">
                     <li><a class="nav-link" href="login.php"><i class="fa-solid fa-right-to-bracket"></i></a></li>
@@ -252,14 +234,17 @@ if (!isset($_SESSION['redirected'])) {
         <strong class="text-black">$<?php echo number_format(isset($_SESSION['subtotal']) ? $_SESSION['subtotal'] : 0, 2); ?></strong>
     </div>
 </div>
-
-<?php if (isset($_SESSION['discount'])): ?>
+<?php if (isset($_SESSION['discounts']) && count($_SESSION['discounts']) > 0): ?>
     <div class="row mb-5">
         <div class="col-md-6">
             <span class="text-black">Discount</span>
         </div>
         <div class="col-md-6 text-right">
-            <strong class="text-black">-$<?php echo number_format($_SESSION['discount'], 2); ?></strong>
+            <?php 
+            // Sum all discounts
+            $totalDiscount = array_sum($_SESSION['discounts']);
+            ?>
+            <strong class="text-black">-$<?php echo number_format($totalDiscount, 2); ?></strong>
         </div>
     </div>
 <?php endif; ?>
@@ -270,16 +255,16 @@ if (!isset($_SESSION['redirected'])) {
     </div>
     <div class="col-md-6 text-right">
         <strong class="text-black">
-            $<?php 
-            // Calculate the total as subtotal minus discount
+            <?php 
+            // Calculate the total as subtotal minus total discounts
             $total = isset($_SESSION['subtotal']) ? $_SESSION['subtotal'] : 0;
-            $discount = isset($_SESSION['discount']) ? $_SESSION['discount'] : 0;
-            echo number_format(max(0, $total - $discount), 2); 
+            $discount = isset($totalDiscount) ? $totalDiscount : 0; // Use calculated total discount
+            echo '$' . number_format(max(0, $total - $discount), 2); 
             ?>
         </strong>
     </div>
 </div>
-  
+
         
                       <div class="row">
                         <div class="col-md-12">
@@ -293,93 +278,111 @@ if (!isset($_SESSION['redirected'])) {
             </div>
           </div>
 		
-	<!-- Start Footer Section -->
-	<footer class="footer-section">
-		<div class="container relative" style="margin-bottom: -50px;">
 
-			<div class="sofa-img">
-				<img src="../images/sofa.png" alt="Image" class="img-fluid">
-			</div>
+		<!-- Start Footer Section -->
+		<footer class="footer-section">
+			<div class="container relative">
 
-			<div class="row">
-				<div class="col-lg-8">
-					<div class="subscription-form">
-					</div>
-				</div>
-			</div>
-
-			<div class="row g-5 mb-5">
-				<div class="col-lg-4">
-					<div class="mb-4 footer-logo-wrap"><a href="#" class="footer-logo">Nest & Buy </a></div>
-					<p class="mb-4">At Nest & Buy, we bring you stylish, high-quality furniture to make your home cozy
-						and beautiful. With a focus on craftsmanship and design, we’re here to help you create spaces
-						you love.
-					</p>
-
-					<ul class="list-unstyled custom-social">
-						<li><a href="#"><span class="fa fa-brands fa-facebook-f"></span></a></li>
-						<li><a href="#"><span class="fa fa-brands fa-twitter"></span></a></li>
-						<li><a href="#"><span class="fa fa-brands fa-instagram"></span></a></li>
-						<li><a href="#"><span class="fa fa-brands fa-linkedin"></span></a></li>
-					</ul>
+				<div class="sofa-img">
+					<img src="../images/sofa.png" alt="Image" class="img-fluid">
 				</div>
 
-				<div class="col-lg-8">
-					<div class="row links-wrap">
-						<div class="col-6 col-sm-6 col-md-3">
-							<ul class="list-unstyled">
-								<li><a href="about.html">About us</a></li>
-								<li><a href="shop.php">Shop</a></li>
-								<li><a href="#">Contact us</a></li>
-							</ul>
-						</div>
+				<div class="row">
+					<div class="col-lg-8">
+						<div class="subscription-form">
+							<h3 class="d-flex align-items-center"><span class="me-1"><img src="images/envelope-outline.svg" alt="Image" class="img-fluid"></span><span>Subscribe to Newsletter</span></h3>
 
-						<div class="col-6 col-sm-6 col-md-3">
-							<ul class="list-unstyled">
-								<li><a href="#">Testimonials</a></li>
-								<li><a href="about.html#ourTeam">Our team</a></li>
-								<li><a href="#">Live chat</a></li>
-							</ul>
-						</div>
+							<form action="#" class="row g-3">
+								<div class="col-auto">
+									<input type="text" class="form-control" placeholder="Enter your name">
+								</div>
+								<div class="col-auto">
+									<input type="email" class="form-control" placeholder="Enter your email">
+								</div>
+								<div class="col-auto">
+									<button class="btn btn-primary">
+										<span class="fa fa-paper-plane"></span>
+									</button>
+								</div>
+							</form>
 
-						<div class="col-6 col-sm-6 col-md-3">
-							<ul class="list-unstyled">
-								<li><a href="#">Category</a></li>
-								<li><a href="#">Product</a></li>
-								<li><a href="#">Best seller</a></li>
-							</ul>
-						</div>
-
-						<div class="col-6 col-sm-6 col-md-3">
-							<ul class="list-unstyled">
-								<img src="../images/Logo (2).png" style="max-width: 130px;">
-							</ul>
 						</div>
 					</div>
 				</div>
 
-			</div>
+				<div class="row g-5 mb-5">
+					<div class="col-lg-4">
+						<div class="mb-4 footer-logo-wrap"><a href="#" class="footer-logo">Furni<span>.</span></a></div>
+						<p class="mb-4">Donec facilisis quam ut purus rutrum lobortis. Donec vitae odio quis nisl dapibus malesuada. Nullam ac aliquet velit. Aliquam vulputate velit imperdiet dolor tempor tristique. Pellentesque habitant</p>
 
-			<div class="border-top copyright">
-				<div class="row pt-4">
-					<div class="col-lg-6">
-						<p class="mb-2 text-center text-lg-start">Copyright &copy;
-							<script>document.write(new Date().getFullYear());</script>. All Rights Reserved. &mdash;
-							Designed with love by Nest & Buy
-						</p>
-					</div>
-
-					<div class="col-lg-6 text-center text-lg-end">
-						<ul class="list-unstyled d-inline-flex ms-auto">
-							<li class="me-4"><a href="#">Terms &amp; Conditions</a></li>
-							<li><a href="#">Privacy Policy</a></li>
+						<ul class="list-unstyled custom-social">
+							<li><a href="#"><span class="fa fa-brands fa-facebook-f"></span></a></li>
+							<li><a href="#"><span class="fa fa-brands fa-twitter"></span></a></li>
+							<li><a href="#"><span class="fa fa-brands fa-instagram"></span></a></li>
+							<li><a href="#"><span class="fa fa-brands fa-linkedin"></span></a></li>
 						</ul>
 					</div>
+
+					<div class="col-lg-8">
+						<div class="row links-wrap">
+							<div class="col-6 col-sm-6 col-md-3">
+								<ul class="list-unstyled">
+									<li><a href="#">About us</a></li>
+									<li><a href="#">Services</a></li>
+									<li><a href="#">Blog</a></li>
+									<li><a href="#">Contact us</a></li>
+								</ul>
+							</div>
+
+							<div class="col-6 col-sm-6 col-md-3">
+								<ul class="list-unstyled">
+									<li><a href="#">Support</a></li>
+									<li><a href="#">Knowledge base</a></li>
+									<li><a href="#">Live chat</a></li>
+								</ul>
+							</div>
+
+							<div class="col-6 col-sm-6 col-md-3">
+								<ul class="list-unstyled">
+									<li><a href="#">Jobs</a></li>
+									<li><a href="#">Our team</a></li>
+									<li><a href="#">Leadership</a></li>
+									<li><a href="#">Privacy Policy</a></li>
+								</ul>
+							</div>
+
+							<div class="col-6 col-sm-6 col-md-3">
+								<ul class="list-unstyled">
+									<li><a href="#">Nordic Chair</a></li>
+									<li><a href="#">Kruzo Aero</a></li>
+									<li><a href="#">Ergonomic Chair</a></li>
+								</ul>
+							</div>
+						</div>
+					</div>
+
 				</div>
+
+				<div class="border-top copyright">
+					<div class="row pt-4">
+						<div class="col-lg-6">
+							<p class="mb-2 text-center text-lg-start">Copyright &copy;<script>document.write(new Date().getFullYear());</script>. All Rights Reserved. &mdash; Designed with love by <a href="https://untree.co">Untree.co</a> Distributed By <a hreff="https://themewagon.com">ThemeWagon</a>  <!-- License information: https://untree.co/license/ -->
+            </p>
+						</div>
+
+						<div class="col-lg-6 text-center text-lg-end">
+							<ul class="list-unstyled d-inline-flex ms-auto">
+								<li class="me-4"><a href="#">Terms &amp; Conditions</a></li>
+								<li><a href="#">Privacy Policy</a></li>
+							</ul>
+						</div>
+
+					</div>
+				</div>
+
 			</div>
-		</div>
-	</footer>
-	<!-- End Footer Section -->
+		</footer>
+		<!-- End Footer Section -->	
 
 
 		<script src="../js/bootstrap.bundle.min.js"></script>
