@@ -33,7 +33,7 @@
         </form>
       </div>
       <div class="form-container sign-in-container">
-      <form action="../php/handler_login.php" method="POST" id="loginForm"  onsubmit="return LoginUser(event)" >
+      <form action="../php/handler_login.php" method="POST" id="loginForm" onsubmit="return LoginUser(event)"  >
         <h1>Sign In</h1>
         <input type="email" name="email" placeholder="Email" id="loginEmail"  />
         <input class='m-3' type="password" name="password" placeholder="Password" id="loginPassword"  />
@@ -127,6 +127,41 @@
       //     console.error('Error during form submission:', error);
       //   }
       // }
+      function LoginUser(event) {
+    event.preventDefault();  // Prevent the form from reloading the page
+
+    try {
+        const email = document.getElementById("loginEmail").value;
+        const password = document.getElementById("loginPassword").value;
+
+        // Basic validation
+        if (!email || !password) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'All fields are required!',
+                confirmButtonColor: '#3B5D50'
+            });
+            return false;
+        }
+
+        console.log("Form passed validation and is submitting");
+
+        // Submit the form if all validation passes
+        document.getElementById("loginForm").submit();
+        return true;
+
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred during login. Please try again.',
+            confirmButtonColor: '#3B5D50'
+        });
+        console.error('Error during form submission:', error);
+    }
+}
+
     </script>
     <script src="../js/auth.js"></script>
   
