@@ -1,7 +1,8 @@
 <?php
 session_start();
 include "../includes/db.php";
-
+$database = new Database();
+$conn = $database->getConnection();
 $query = "SELECT * FROM Products";
 $stmt = $conn->query($query);
 $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -24,6 +25,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
     }
     header("Location: cart.php");
     exit();
+}
+
+try {
+    // Enable error reporting for PDO
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // Default customer ID (for testing)
+    $customerId = 1; // This should eventually come from the logged-in user's session
+
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['product_id'])) {
+        $productId = $_POST['product_id'];
+
+        // Check if the product is already in the wishlist
+        $stmt = $conn->prepare("SELECT * FROM wishlists WHERE customer_id = :customer_id AND product_id = :product_id");
+        $stmt->execute(['customer_id' => $customerId, 'product_id' => $productId]);
+        $wishlistItem = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$wishlistItem) {
+            // Insert into wishlist
+            $stmt = $conn->prepare("INSERT INTO wishlists (customer_id, product_id, created_at, updated_at) VALUES (:customer_id, :product_id, NOW(), NOW())");
+            $stmt->execute([
+                'customer_id' => $customerId,
+                'product_id' => $productId
+            ]);
+        }
+
+        // Redirect back to the wishlist page
+        header("Location: wishlist.php");
+        exit();
+    }
+} catch (PDOException $e) {
+    // Output the error message
+    echo "Error: " . $e->getMessage();
 }
 ?>
 
@@ -50,6 +84,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
                             <form method="POST">
                                 <input type="hidden" name="product_id" value="<?php echo $product['product_id']; ?>">
                                 <button type="submit" name="add_to_cart" class="btn btn-primary">Add to Cart</button>
+                                  <!-- Add to Wishlist Button -->
+                                  <input type="hidden" name="product_id" value="1">
+                                  <button type="submit" name="add_to_wishlist" class="btn btn-secondary">Add to Wishlist</button>
                             </form>
                         </div>
                     </div>

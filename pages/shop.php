@@ -1,5 +1,5 @@
 <?php
-$dsn = 'mysql:host=localhost;dbname=ecommerce_db1';
+$dsn = 'mysql:host=localhost;dbname=ecommerce_db';
 $username = 'root';
 $password = ''; 
 
@@ -14,15 +14,16 @@ try {
 $product_name = isset($_GET['product_name']) ? $_GET['product_name'] : '';
 $min_price = isset($_GET['min_price']) ? $_GET['min_price'] : 0;
 $max_price = isset($_GET['max_price']) ? $_GET['max_price'] : 9999; // Ensure max price has a valid default value
-$category_id = isset($_GET['product_id']) ? $_GET['product_id'] : null; // Get product_id from the form
+$category_id = isset($_GET['category_id']) ? $_GET['category_id'] : null; // Get category_id from the form
 
 // Corrected SQL query to include category filtering
-$sql = "SELECT products.*, productimages.image_url 
-        FROM products 
-        JOIN productimages ON products.product_id = productimages.product_id
-        WHERE products.product_name LIKE :product_name 
-        AND products.price BETWEEN :min_price AND :max_price
-		 AND productimages.image_url NOT REGEXP '[0-9]'";
+$sql = "SELECT products.*, productimages.image_url, categories.category_name
+            FROM products 
+            JOIN productimages ON products.product_id = productimages.product_id
+            JOIN categories ON products.category_id = categories.category_id
+            WHERE products.product_name LIKE :product_name 
+            AND products.price BETWEEN :min_price AND :max_price
+            AND productimages.image_url NOT REGEXP '[0-9]'";
 
 // Add category filter if it exists
 if ($category_id) {
@@ -47,11 +48,11 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     // Handle the error (optional logging)
     echo "Connection failed: " . $e->getMessage();
-    // You can also log the error message or handle it as needed
 }
 
 // Displaying Filtered Products
-?>  
+?>
+
 
 
 
@@ -145,21 +146,25 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <input type="number" class="form-control" id="max_price" name="max_price" min="0" step="0.01" value="<?= htmlspecialchars($max_price); ?>">
         </div>
 
-     <!-- Category -->
+	<!-- Category Filter -->
 <div class="col-md-3">
-    <label for="product_id" class="form-label">Category</label>
-    <select class="form-select" id="product_id" name="product_id">
+    <label for="category_id" class="form-label">Category</label>
+    <select class="form-select" id="category_id" name="category_id">
         <option value="">All Categories</option>
         <?php
         // Fetch categories for the filter dropdown
         try {
-            $product_stmt = $pdo->query("SELECT * FROM products");
-            $products = $product_stmt->fetchAll(PDO::FETCH_ASSOC);
-            // Initialize $product_id from GET or as an empty string if not set
-            $product_id = isset($_GET['product_id']) ? $_GET['product_id'] : '';
-            foreach ($products as $product) {
-                $selected = $product_id == $product['product_id'] ? 'selected' : '';
-                echo "<option value=\"" . htmlspecialchars($product['product_id']) . "\" $selected>" . htmlspecialchars($product['product_name']) . "</option>";
+            $category_stmt = $pdo->query("SELECT * FROM categories");
+            $categories = $category_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Initialize $category_id from GET or as an empty string if not set
+            $category_id = isset($_GET['category_id']) ? $_GET['category_id'] : '';
+
+            foreach ($categories as $category) {
+                // Check if the category_id from GET is the same as the current category
+                $selected = $category_id == $category['category_id'] ? 'selected' : '';
+                // Display the category_name
+                echo "<option value=\"" . htmlspecialchars($category['category_id']) . "\" $selected>" . htmlspecialchars($category['category_name']) . "</option>";
             }
         } catch (PDOException $e) {
             echo "Error fetching categories: " . $e->getMessage();
@@ -167,6 +172,7 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
         ?>
     </select>
 </div>
+
 
 
         <!-- Submit Button -->
@@ -185,7 +191,7 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="col-12 col-md-4 col-lg-3 mb-5">
                         <a class="product-item" href="productdetails.php?id=<?= htmlspecialchars($product['product_id']); ?>">
                             <!-- Adjusted the image path to include the full web path -->
-                            <img  width="261px" height="261px" src="http://localhost/project3/Ecommerce_website.github.io-/<?= htmlspecialchars($product['image_url']); ?>" class="img-fluid product-thumbnail" alt="<?= htmlspecialchars($product['product_name']);?>">
+                            <img  width="261px" height="261px" src="http://localhost/Ecommerce_website.github.io-\<?= htmlspecialchars($product['image_url']); ?>" class="img-fluid product-thumbnail" alt="<?= htmlspecialchars($product['product_name']);?>">
                             <h3 class="product-title"><?= htmlspecialchars($product['product_name']); ?></h3>
                             <strong class="product-price">$<?= htmlspecialchars($product['price']); ?></strong>
 
