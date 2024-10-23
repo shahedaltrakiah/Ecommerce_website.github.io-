@@ -1,41 +1,43 @@
 <?php
+
+
 session_start();
+$_SESSION['errorMassing'] = '';
 
 include('../includes/db.php');
 
-// Create a new instance of the Database class and get the connection
+
 $db = new Database();
 $conn = $db->getConnection();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Get email and password from POST request
+   
     $email = $_POST['email'];
     $password = $_POST['password'];
 
     try {
-        // Prepare SQL query to fetch user data by email
+    
         $query = "SELECT username, password, image_url, customer_ID FROM customers WHERE email = :email"; 
         
-        $stmt = $conn->prepare($query); // Prepare the statement
-        $stmt->execute([':email' => $email]); // Execute with the email parameter
-        
-        // Fetch the user data
+        $stmt = $conn->prepare($query);
+        $stmt->execute([':email' => $email]); 
+      
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         echo '************************************<br>';
 
-        // Debug: Check if user was fetched
+      
         if ($user) {
             echo '********************2****************<br>';
             echo 'Fetched user data:<br>';
             echo 'Username: ' . htmlspecialchars($user['username']) . '<br>';
-            echo 'Password Hash: ' . htmlspecialchars($user['password']) . '<br>'; // Debugging the stored password hash
+            echo 'Password Hash: ' . htmlspecialchars($user['password']) . '<br>'; 
             
-            // Verify the password
+          
             if ($user && password_verify($password, $user['password'])){
                 echo '********************3****************<br>';
                 echo 'Password verified successfully.<br>';
 
-                // Set session variables on successful login
+        
                 $_SESSION['user'] = [
                     'name' => $user['username'],
                     'email' => $email,
@@ -45,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                  echo $user['username'] .'<br>';
                  echo ''. htmlspecialchars($user['customer_ID']) .'<br>';
                  header('Location:../index.php' );
-                // Show success message using SweetAlert
+               
                 echo '<script>
                     Swal.fire({
                         icon: "success",
@@ -58,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </script>';
                 exit();
             } else {
-                // Password mismatch
+               
                 echo 'Password verification failed.<br>';
                 echo '<script>
                     Swal.fire({
@@ -75,6 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             }
         } else {
+            header('Location:../pages/login.php' );
     
             echo 'No user found with that email.<br>';
             echo '<script>
@@ -90,8 +93,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
         }
     } catch (Exception $e) {
-        // Redirect to login page on error
-        echo 'Error occurred: ' . htmlspecialchars($e->getMessage()) . '<br>'; // Debugging the error message
+     
+        echo 'Error occurred: ' . htmlspecialchars($e->getMessage()) . '<br>';
         echo '<script>
             Swal.fire({
                 icon: "error",

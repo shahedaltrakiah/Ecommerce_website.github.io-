@@ -1,3 +1,6 @@
+<?php 
+ session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -7,7 +10,6 @@
     <meta name="description" content="" />
     <meta name="keywords" content="bootstrap, bootstrap4" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    
     <!-- Bootstrap CSS -->
     <!-- <link href="../css/bootstrap.min.css" rel="stylesheet"> -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
@@ -18,6 +20,19 @@
     <title>Document</title>
   </head>
   
+  <?php 
+  if (isset($_SESSION['errorMassing'])) {
+    echo "<script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Database Error',
+                text: 'There was an issue connecting to the database: " .   var_export( $_SESSION['errorMassing']) . "',
+                confirmButtonColor: '#3B5D50' 
+            });
+        </script>";
+        unset($_SESSION['errorMassing']);
+  }
+  ?>
   <body onload="isGuest()">
     <div class="container" id="container">
       <div class="form-container sign-up-container overflow-auto">
@@ -94,83 +109,39 @@
       }
 
 
+     function LoginUser(event) {
+        event.preventDefault();  
+        try {
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+            if (!email || !password) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'All fields are required!',
+                    confirmButtonColor: '#3B5D50'
+                });
+                return false;
+            }
 
-      // function LoginUser(event) {
-      //   event.preventDefault();
-      //   try {
-       
-      //     const email = document.getElementById("loginEmail").value;
-      //     const password = document.getElementById("loginPassword").value;
-        
+            console.log("Form passed validation and is submitting");
 
-      //     if ( !email ||  !password) {
-      //       Swal.fire({
-      //         icon: 'error',
-      //         title: 'Error',
-      //         text: 'All fields are required!',
-      //         confirmButtonColor: '#3B5D50'
-      //       });
-      //       return false;
-      //     }
-      //     console.log("Form passed validation and is submitting");
-      //     document.getElementById("loginForm").submit();
-      //     return true;
-          
 
-      //   } catch (error) {
-      //     Swal.fire({
-      //       icon: 'error',
-      //       title: 'Error',
-      //       text: 'An error occurred salem registration. Please try again.',
-      //       confirmButtonColor: '#3B5D50'
-      //     });
-      //     console.error('Error during form submission:', error);
-      //   }
-      // }
-      function LoginUser(event) {
-    event.preventDefault();  // Prevent the form from reloading the page
+            document.getElementById("loginForm").submit();
+            return true;
 
-    try {
-        const email = document.getElementById("loginEmail").value;
-        const password = document.getElementById("loginPassword").value;
-
-        // Basic validation
-        if (!email || !password) {
+        } catch (error) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'All fields are required!',
+                text: 'An error occurred during login. Please try again.',
                 confirmButtonColor: '#3B5D50'
             });
-            return false;
+            console.error('Error during form submission:', error);
         }
-
-        console.log("Form passed validation and is submitting");
-
-        // Submit the form if all validation passes
-        document.getElementById("loginForm").submit();
-        return true;
-
-    } catch (error) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An error occurred during login. Please try again.',
-            confirmButtonColor: '#3B5D50'
-        });
-        console.error('Error during form submission:', error);
     }
-}
-
     </script>
     <script src="../js/auth.js"></script>
-  
- 
-
- 
-   
-
-    
     <script src="../js/main.js"></script>
 	<script src="../js/bootstrap.bundle.min.js"></script>
 	<script src="../js/tiny-slider.js"></script>

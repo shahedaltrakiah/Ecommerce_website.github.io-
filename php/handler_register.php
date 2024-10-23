@@ -17,7 +17,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $phone_number = $_POST['phone_number'];
     $image_url = ''; 
     $address = ''; 
-    
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     try {
@@ -25,8 +24,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $query ="INSERT INTO customers(username, first_name, last_name, email, password, phone_number, image_url, address, created_at, updated_at)
             VALUES (:username, :first_name, :last_name, :email, :password_hash, :phone_number, :image_url, :address, NOW(), NOW())";
         $stmt = $conn->prepare($query);
-
-       
         $stmt->bindParam(':username', $username);
         $stmt->bindParam(':first_name', $first_name);
         $stmt->bindParam(':last_name', $last_name);
@@ -35,11 +32,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bindParam(':phone_number', $phone_number);
         $stmt->bindParam(':image_url', $image_url); 
         $stmt->bindParam(':address', $address);
-       
-        
         if ($stmt->execute()) {
            header('Location:../pages/login.php' );
-            
         exit();
         } else {
             echo "<script>
@@ -54,15 +48,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
     } catch (PDOException $e) {
-       
-        echo "<script>
-            Swal.fire({
-                icon: 'error',
-                title: 'Database Error',
-                text: 'There was an issue connecting to the database: " . $e->getMessage() . "',
-                confirmButtonColor: '#3B5D50' 
-            });
-        </script>";
+        $_SESSION['errorMassing'] = strval($e->getMessage());
+        // "
+        // <script>
+        //     Swal.fire({
+        //         icon: 'error',
+        //         title: 'Database Error',
+        //         text: 'There was an issue connecting to the database: " . $e->getMessage() . "',
+        //         confirmButtonColor: '#3B5D50' 
+        //     });
+        // </script>
+        // ";
+        header('Location:../pages/login.php' );
     }
 }
 ?>  
