@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 
@@ -45,7 +46,30 @@
                 </ul>
 
                 <ul class="custom-navbar-cta navbar-nav mb-2 mb-md-0 ms-5">
-                    <li><a class="nav-link" href="pages/login.php"><i class="fa-solid fa-right-to-bracket"></i></a></li>
+                <?php session_start(); ?>   
+                <nav>
+    <ul class="navbar-nav">
+        <?php if (isset($_SESSION['user'])): ?>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="<?php echo $_SESSION['user']['image_url'] ?: 'https://cdn.icon-icons.com/icons2/2030/PNG/512/user_icon_124042.png'; ?>" alt="User Image" style="width: 30px; height: 30px; border-radius: 50%;">
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                    <li><a class="dropdown-item" href="pages/profile.php">Profile</a></li>
+                   
+                    <li>
+                      <a class="dropdown-item"href="pages/logout.php" onclick="confirmLogout()">Logout</a>
+                     </li>
+
+                </ul>
+            </li>
+        <?php else: ?>
+            <li><a class="nav-link" href="pages/login.php"><i class="fa-solid fa-right-to-bracket"></i></a></li>
+        <?php endif; ?>
+    </ul>
+</nav>
+
+
                     <li><a class="nav-link" href="pages/cart.php">
                             <img src="images/cart.svg">
                             <span
@@ -660,6 +684,8 @@
     <!-- End Footer Section -->
 
     <script src="js/main.js"></script>
+    <script src="js/logout.js"></script>
+
     <script src="js/bootstrap.bundle.min.js"></script>
     <script src="js/tiny-slider.js"></script>
     <script src="js/custom.js"></script>

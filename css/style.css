@@ -6,6 +6,19 @@
 */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
+.input-group {
+  margin: 1rem 0; /* Add spacing around the input group */
+}
+
+.form-control {
+  width: 60px; /* Adjust width for the input field */
+  text-align: center; /* Center the text */
+}
+
+.btn-outline-secondary:hover {
+  background-color: #f8f9fa; /* Light background on hover */
+}
+
 body {
   overflow-x: hidden;
   position: relative;
