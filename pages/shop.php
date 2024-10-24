@@ -1,5 +1,5 @@
 <?php
-$dsn = 'mysql:host=localhost;dbname=ecommerce_db';
+$dsn = 'mysql:host=localhost;dbname=e-commerce_db';
 $username = 'root';
 $password = ''; 
 
