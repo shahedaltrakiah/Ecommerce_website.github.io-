@@ -21,10 +21,8 @@ try {
         $stmt->bindParam(':product_id', $productId);
         $stmt->execute();
         
-        // Fetch the product details
         $product = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        // Check if product exists
         if ($product === false) {
             echo "Product not found.";
             exit;
@@ -55,7 +53,6 @@ try {
     <title><?= htmlspecialchars($product['product_name'] ?? 'Unknown Product'); ?> | Nest & Buy</title>
 </head>
 <body>
-
     <!-- Start Header/Navigation -->
     <nav class="custom-navbar navbar navbar-expand-md navbar-dark bg-dark" aria-label="Furni navigation bar">
         <div class="container">
@@ -78,23 +75,106 @@ try {
         </div>
     </nav>
     <!-- End Header/Navigation -->
-
     <div class="container mt-5">
-        <div class="row">
-            <div class="col-md-6">
-                <img  width="261px" height="261px" src="http://localhost/Ecommerce_website.github.io-/<?= htmlspecialchars($product['image_url'] ?? '../images/default-product.png'); ?>" class="img-fluid" alt="<?= htmlspecialchars($product['product_name']); ?>">
-            </div>
-            <div class="col-md-6">
-                <h1><?= htmlspecialchars($product['product_name']); ?></h1>
-                <p><?= htmlspecialchars($product['description']); ?></p>
-                <h3 class="text-success">$<?= htmlspecialchars($product['price']); ?></h3>
-                <button class="btn btn-primary">Add to Cart</button>
-                <button class="btn btn-light ms-2">
-                    <i class="fa-solid fa-heart " ></i> Add to Wishlist
-                </button>
+    <div class="row s_product_inner justify-content-center mb-5">
+        <!-- Product Images Section -->
+        <div class="col-lg-7 col-xl-7">
+            <div class="product_slider_img">
+                <div id="vertical">
+                    <!-- Main Product Image -->
+                    <div>
+                        <?php
+                        // The main product image URL (base image)
+                        $baseImageUrl = htmlspecialchars($product['image_url'] ?? '../images/default-product.png');
+                        ?>
+                        <img id="main-image" width="461px" height="461px" src="http://localhost/Ecommerce_website.github.io-/<?= $baseImageUrl; ?>" class="img-fluid" alt="<?= htmlspecialchars($product['product_name']); ?>">
+                    </div>
+
+                    <!-- Sub-images (Thumbnails) -->
+                    <div class="sub-images mt-3">
+                        <?php
+                        // Extract base name and extension for image processing
+                        $baseName = pathinfo($baseImageUrl, PATHINFO_FILENAME); 
+                        $extension = pathinfo($baseImageUrl, PATHINFO_EXTENSION); 
+
+                        // Loop through sub-images (from 1 to 9)
+                        for ($i = 1; $i <= 9; $i++) {
+                            // Generate sub-image URL
+                            $subImageUrl = "http://localhost/Ecommerce_website.github.io-/images/{$baseName}{$i}.{$extension}";
+
+                            // Check if the file exists locally
+                            $localImagePath = "../images/{$baseName}{$i}.{$extension}";
+
+                            // If the file doesn't exist, stop the loop
+                            if (!file_exists($localImagePath)) {
+                                break;
+                            }
+
+                            // Display the sub-image with a class for JavaScript handling
+                            echo '<img class="sub-image img-thumbnail ms-1" width="60px" height="60px" src="' . $subImageUrl . '" alt="' . htmlspecialchars($product['product_name']) . '">';
+                        }
+                        ?>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <!-- Product Details Section -->
+        <div class="col-lg-5 col-xl-4">
+    <div class="s_product_text ">
+        <?php
+        // Function to format the product name
+        function formatProductName($name) {
+            // Replace dashes with spaces and capitalize each word
+            return ucwords(str_replace('-', ' ', $name));
+        }
+        ?>
+        
+        <h3><?= htmlspecialchars(formatProductName($product['product_name'])); ?></h3>
+        <h2>$<?= htmlspecialchars($product['price']); ?></h2>
+        
+        <p><?= htmlspecialchars($product['description']); ?></p>
+        <ul class="list list-unstyled">
+            <li>
+                <a class="active" href="#"><span>Category</span> : Household</a>
+            </li>
+            <li>
+                <a href="#">
+                    <span>Availability</span> :
+                    <?php
+                    // Check stock quantity for availability
+                    if (is_null($product['stock_quantity'])) {
+                        echo "Sold Out";
+                    } elseif ($product['stock_quantity'] <= 5) {
+                        echo "Don't miss out, stock running low!";
+                    } else {
+                        echo "In Stock";
+                    }
+                    ?>
+                </a>
+            </li>
+        </ul>
+        <div class="card_area d-flex justify-content-between align-items-center">
+            <div class="product_count">
+                <span class="inumber-decrement"> <i class="ti-minus"></i></span>
+                <input class="input-number" type="text" value="1" min="0" max="10">
+                <span class="number-increment"> <i class="ti-plus"></i></span>
+            </div>
+            <a href="#" class="btn btn-secondary me-1">Add to Cart</a>
+            <a href="#" class="like_us btn-secondary"> <i class="ti-heart"></i> </a>
+        </div>
     </div>
+</div>
+
+    </div>
+</div>
+
+
+
+
+
+
+
 
     <!-- Start Footer Section -->
     <footer class="footer-section">
@@ -148,6 +228,22 @@ try {
     </footer>
     <!-- End Footer Section -->
 
+<!-- JavaScript for Image Swap -->
+<script>
+// Select all sub-images
+const subImages = document.querySelectorAll('.sub-image');
+
+// Select the main image
+const mainImage = document.getElementById('main-image');
+
+// Loop through each sub-image and add a click event listener
+subImages.forEach(function(subImage) {
+    subImage.addEventListener('click', function() {
+        // Set the src of the main image to the clicked sub-image src
+        mainImage.src = subImage.src;
+    });
+});
+</script>
     <script src="../js/bootstrap.bundle.min.js"></script>
     <script src="../js/tiny-slider.js"></script>
     <script src="../js/custom.js"></script>
