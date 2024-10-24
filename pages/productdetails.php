@@ -195,7 +195,10 @@ try {
                 <input class="input-number" type="text" value="1" min="0" max="10">
                 <span class="number-increment"> <i class="ti-plus"></i></span>
             </div>
-            <a href="#" class="btn btn-secondary me-1">Add to Cart</a>
+            <form method="POST" action="add_to_cart.php">
+    <input type="hidden" name="product_id" value="<?= $product['product_id']; ?>">
+    <button type="submit" name="add_to_cart" class="btn btn-primary">Add to Cart</button>
+</form>
             <a href="#" class="like_us btn-secondary"> <i class="ti-heart"></i> </a>
         </div>
     </div>
