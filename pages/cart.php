@@ -5,8 +5,12 @@ include "../includes/db.php";
 $subtotal = 0; // Initialize subtotal
 $database = new Database();
 $conn = $database->getConnection();
-
-// Initialize the cart if it doesn't exist
+$stmt = $conn->prepare("SELECT p.*, MIN(pi.image_url) AS image_url
+FROM products p
+LEFT JOIN productimages pi ON p.product_id = pi.product_id
+GROUP BY p.product_id;");
+$stmt->execute(); // No need to pass any arguments here
+$product = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
@@ -14,21 +18,25 @@ if (!isset($_SESSION['cart'])) {
 // Add products to cart
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
     $productId = $_POST['product_id'];
-    $stmt = $conn->prepare("SELECT * FROM products WHERE product_id = :product_id");
-    $stmt->execute(['product_id' => $productId]);
+    $stmt = $conn->prepare("SELECT p.*, MIN(pi.image_url) AS image_url
+FROM products p
+LEFT JOIN productimages pi ON p.product_id = pi.product_id
+GROUP BY p.product_id;");
+    //$stmt->execute($stmt);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    var_dump($product);
+    die();
     if ($product) {
-      $_SESSION['cart'][$productId] = [
-          'name' => $product['product_name'],
-          'price' => $product['price'],
-          'quantity' => ($_SESSION['cart'][$productId]['quantity'] ?? 0) + 1,
-          'image' => $product['image_url'], 
-          'description' => $product['description'],
-      ];
-  }
+        $_SESSION['cart'][$productId] = [
+            'name' => $product['product_name'],
+            'price' => $product['price'],
+            'quantity' => ($_SESSION['cart'][$productId]['quantity'] ?? 0) + 1,
+            'image' => $product['image_url'],
+            'description' => $product['description'],
+        ];
+    }
 }
-  
 
 // Calculate subtotal
 foreach ($_SESSION['cart'] as $product) {
@@ -184,51 +192,52 @@ if (!isset($_SESSION['redirected'])) {
   <!-- End Header/Navigation -->
 
 
-          <div class="untree_co-section before-footer-section">
-            <div class="container">
-              <div class="row mb-5">
-                <form class="col-md-12" method="post">
-                  <div class="site-blocks-table">
-                    <table class="table">
-                      <thead>
-                        <tr>
-                          <th class="product-thumbnail">Image</th>
-                          <th class="product-name">Product</th>
-                          <th class="product-price">Price</th>
-                          <th class="product-quantity">Quantity</th>
-                          <th class="product-total">Total</th>
-                          <th class="product-remove">Remove</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <?php if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])): ?>
-                          <?php foreach ($_SESSION['cart'] as $product_id => $product): ?>
-                            <?php
-                            $total = $product['price'] * $product['quantity'];
-                            $subtotal += $total;
-                            ?>
-                            <tr>
-                            <td class="product-thumbnail">
-      <img width="261px" height="261px" src="http://localhost/php-project/Ecommerce_website.github.io-/images/<?= htmlspecialchars($product['image']) ?>" class="img-fluid product-thumbnail" alt="<?= htmlspecialchars($product['name']); ?>">
-  </td>
-                              <td class="product-name"><?php echo htmlspecialchars($product['name']); ?></td>
-                              <td class="product-price">$<?php echo number_format($product['price'], 2); ?></td>
-                              <td class="product-quantity"><?php echo htmlspecialchars($product['quantity']); ?></td>
-                              <td class="product-total">$<?php echo number_format($total, 2); ?></td>
-                              <td class="product-remove"><a
-                                  href="remove_from_cart.php?id=<?php echo urlencode($product_id); ?>">Remove</a></td>
-                            </tr>
-                          <?php endforeach; ?>
-                        <?php else: ?>
-                          <tr>
-                            <td colspan="6" class="text-center">No items in the cart</td>
-                          </tr>
-                        <?php endif; ?>
-                      </tbody>
-                    </table>
-                  </div>
-                </form>
-              </div>
+        <div class="untree_co-section before-footer-section">
+          <div class="container">
+            <div class="row mb-5">
+              <form class="col-md-12" method="post">
+                <div class="site-blocks-table">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th class="product-thumbnail">Image</th>
+                        <th class="product-name">Product</th>
+                        <th class="product-price">Price</th>
+                        <th class="product-quantity">Quantity</th>
+                        <th class="product-total">Total</th>
+                        <th class="product-remove">Remove</th>
+                      </tr>
+                    </thead>
+                    <?php 
+        $subtotal = 0; // Initialize subtotal
+        if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])): 
+            foreach ($_SESSION['cart'] as $product_id => $product): 
+                $total = $product['price'] * $product['quantity'];
+                $subtotal += $total; 
+        ?>
+                <tr>
+                    <td class="product-thumbnail">
+                    <img id="main-image" width="461px" height="461px" src="<?=  $product['image']; ?>" class="img-fluid" alt="<?= htmlspecialchars($product['name']); ?>">
+                    </td>
+                    <td class="product-name"><?php echo htmlspecialchars($product['name']); ?></td>
+                    <td class="product-price">$<?php echo number_format($product['price'], 2); ?></td>
+                    <td class="product-quantity"><?php echo htmlspecialchars($product['quantity']); ?></td>
+                    <td class="product-total">$<?php echo number_format($total, 2); ?></td>
+                    <td class="product-remove">
+                        <a href="remove_from_cart.php?id=<?php echo urlencode($product_id); ?>">Remove</a>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <tr>
+                <td colspan="6" class="text-center">No items in the cart</td>
+            </tr>
+        <?php endif; ?>
+    </tbody>
+                  </table>
+                </div>
+              </form>
+            </div>
 
             <div class="row">
               <div class="col-md-6">
@@ -295,6 +304,7 @@ if ($discountAmount > 0): ?>
         </div>
     </div>
 <?php endif; ?>
+
 <div class="row mb-5">
     <div class="col-md-6">
         <span class="text-black">Total</span>
