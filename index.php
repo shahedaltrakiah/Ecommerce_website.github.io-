@@ -571,7 +571,7 @@
                                 <input type="email" class="form-control" placeholder="Enter your email" id="email"
                                     name="email">
                             </div>
-                            <div class="col-auto" style="margin-top: 25px;">
+                            <div class="col-auto">
                                 <button type="submit" class="btn btn-primary">
                                     <span class="fa fa-paper-plane"></span>
                                 </button>
