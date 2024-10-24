@@ -1,5 +1,4 @@
 <?php 
-// Database connection setup
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -7,26 +6,62 @@ $dbname = "e-commerce_db";
 
 try {
     $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
-    // Set PDO error mode to exception
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // Check if product ID is set in the URL
     if (isset($_GET['id'])) {
         $productId = htmlspecialchars($_GET['id']);
-        
-        // Prepare and execute the query to fetch product details by ID
+
+        // Fetch product details by ID
         $stmt = $conn->prepare("SELECT products.*, productimages.image_url FROM products 
                                  JOIN productimages ON products.product_id = productimages.product_id 
                                  WHERE products.product_id = :product_id");
         $stmt->bindParam(':product_id', $productId);
         $stmt->execute();
-        
+
         $product = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($product === false) {
             echo "Product not found.";
             exit;
         }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Check if the form is submitted
+            $fullName = htmlspecialchars($_POST['full_name']);
+            $email = htmlspecialchars($_POST['email']);
+            $phone = htmlspecialchars($_POST['phone']);
+            $rating = htmlspecialchars($_POST['rating']);
+            $comment = htmlspecialchars($_POST['comment']);
+        
+            // Prevent duplicate submissions by checking existing reviews (optional)
+            $existingReviewStmt = $conn->prepare("SELECT * FROM reviews WHERE product_id = :product_id AND customer_id = :customer_id");
+            $existingReviewStmt->bindParam(':product_id', $productId);
+            $existingReviewStmt->bindParam(':customer_id', $customerId); // Assuming you have the customer ID stored
+            $existingReviewStmt->execute();
+        
+            if ($existingReviewStmt->rowCount() == 0) {
+                // Insert the review if not exists
+                $stmt = $conn->prepare("INSERT INTO reviews (product_id, customer_id, rating, comment, created_at) 
+                                        VALUES (:product_id, 1, :rating, :comment, NOW())");
+                $stmt->bindParam(':product_id', $productId);
+                $stmt->bindParam(':rating', $rating);
+                $stmt->bindParam(':comment', $comment);
+                $stmt->execute();
+        
+                echo "<script>alert('Thank you for your review!');</script>";
+            } else {
+                echo "<script>alert('You have already submitted a review for this product!');</script>";
+            }
+        }
+        
+
+        // Fetch reviews for the product
+        $reviewsStmt = $conn->prepare("SELECT * FROM reviews WHERE product_id = :product_id");
+        $reviewsStmt->bindParam(':product_id', $productId);
+        $reviewsStmt->execute();
+        $reviews = $reviewsStmt->fetchAll(PDO::FETCH_ASSOC);
+
     } else {
         echo "Product ID not found.";
         exit;
@@ -164,16 +199,59 @@ try {
             <a href="#" class="like_us btn-secondary"> <i class="ti-heart"></i> </a>
         </div>
     </div>
+    
 </div>
-
+<div class="container mt-5">
+        <!-- Review Form -->
+        <h4>Add Your Review</h4>
+    <form method="POST" action="">
+        <div class="form-group">
+            <label for="full_name">Full Name:</label>
+            <input type="text" name="full_name" id="full_name" class="form-control w-50" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" name="email" id="email" class="form-control w-50" required>
+        </div>
+        <div class="form-group">
+            <label for="phone">Phone:</label>
+            <input type="text" name="phone" id="phone" class="form-control w-50" required>
+        </div>
+        <div class="form-group">
+            <label for="rating">Rating:</label>
+            <select name="rating" id="rating" class="form-control w-50" required>
+                <option value="1">1 Star</option>
+                <option value="2">2 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="5">5 Stars</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="comment">Comment:</label>
+            <textarea name="comment" id="comment" class="form-control w-50" rows="4" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Review</button>
+               
+    </form>
     </div>
-</div>
 
-
-
-
-
-
+    <!-- Display Reviews -->
+    <h4 class="mt-5">Reviews</h4>
+    <?php if (count($reviews) > 0): ?>
+        <?php foreach ($reviews as $review): ?>
+            <div class="review">
+                <p><strong>Rating:</strong> <?= htmlspecialchars($review['rating']); ?> Stars</p>
+                <p><strong>Comment:</strong> <?= htmlspecialchars($review['comment']); ?></p>
+                <p><em>Reviewed on <?= htmlspecialchars($review['created_at']); ?></em></p>
+                <hr>
+            </div>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <p>No reviews yet. Be the first to leave a review!</p>
+    <?php endif; ?>
+    </div>
+</form>
 
 
     <!-- Start Footer Section -->
